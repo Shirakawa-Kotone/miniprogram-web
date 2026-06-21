@@ -348,8 +348,8 @@ input[type="number"] {
   display: flex;
   align-items: center;
   flex-shrink: 0;
-  margin-left: 8px;
-  gap: 4px;
+  margin-left: 6px;
+  gap: 2px;
 }
 
 .help-btn {
