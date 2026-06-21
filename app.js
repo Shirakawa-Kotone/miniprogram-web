@@ -1534,7 +1534,7 @@ function init() {
             // 切换到主页面
             setTimeout(() => {
               DOM.pageLoading.style.display = 'none'
-              DOM.pageIndex.style.display = 'flex'
+              DOM.pageIndex.style.display = document.documentElement.clientWidth >= 860 ? 'grid' : 'flex'
 
               state.loaded = true
               state.darkMode = document.documentElement.classList.contains('dark-mode')
