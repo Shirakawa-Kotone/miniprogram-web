@@ -2,28 +2,6 @@
 
 江西省2024-2026年高考录取数据查询工具，支持院校、专业、分数、排名等多维度筛选。
 
-## 在线演示
-
-部署到 GitHub Pages 后即可在线访问。
-
-## 部署到 GitHub Pages
-
-### 方式一：使用项目根目录的 GitHub Pages
-
-1. 将 `web/` 目录下的所有文件推送至 GitHub 仓库
-2. 在仓库 Settings → Pages 中，选择部署源为对应分支，目录为 `web/`（或根目录）
-
-### 方式二：独立部署
-
-直接将 `web/` 目录下的文件部署到任何静态文件服务器：
-
-```bash
-# 简单本地预览
-cd web
-python3 -m http.server 8000
-# 或
-npx serve .
-```
 
 ## 项目结构
 
@@ -65,6 +43,3 @@ web/
 - Vanilla JavaScript（无框架、无构建工具）
 - 移动端优先设计，适配手机浏览器
 
-## 原始项目
-
-本 Web 版由微信小程序改写而来，原始项目位于 [miniprogram/](../miniprogram/) 目录。
