@@ -517,7 +517,7 @@ input[type="number"] {
 
 .card-year {
   font-size: 11px;
-  color: var(--text-muted);
+  color: #666;
   background: var(--bg);
   padding: 1px 6px;
   border-radius: 3px;
@@ -1105,6 +1105,11 @@ input[type="number"] {
 :root.dark-mode .gp-label {
   background: #0d2d3d;
   color: var(--primary);
+}
+
+:root.dark-mode .card-year {
+  color: #bbb;
+  background: #2a2a2a;
 }
 
 :root.dark-mode .scroll-select-item {
