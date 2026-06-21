@@ -1248,7 +1248,7 @@ function bindEvents() {
   // Year tabs (event delegation)
   DOM.yearTabs.addEventListener('click', function (e) {
     const tab = e.target.closest('.tab')
-    if (!tab || !tab.dataset.year) return
+    if (!tab || tab.dataset.year === undefined) return
     onYearChange(tab.dataset.year)
   })
 
