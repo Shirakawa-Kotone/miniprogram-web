@@ -1201,11 +1201,21 @@ input[type="number"] {
    Desktop responsive adjustments
    ============================================================ */
 @media (min-width: 600px) {
-  .page {
+  body {
+    background: #e8e8e8;
+  }
+
+  :root.dark-mode body {
+    background: #0a0a0a;
+  }
+
+  .page, .page-loading {
     max-width: 480px;
     margin: 0 auto;
     box-shadow: 0 0 20px rgba(0,0,0,0.1);
     position: relative;
+    border-left: 1px solid var(--border);
+    border-right: 1px solid var(--border);
   }
 
   .filter-bar {
