@@ -1269,6 +1269,7 @@ input[type="number"] {
   .page {
     display: grid;
     grid-template-columns: 280px 1fr;
+    grid-template-rows: auto 1fr;
   }
 
   .filter-bar {
@@ -1277,6 +1278,7 @@ input[type="number"] {
     padding: 12px 14px;
     border-right: 1px solid var(--border);
     max-height: 100vh;
+    max-width: none;
     overflow-y: auto;
     box-shadow: none;
   }
@@ -1284,6 +1286,7 @@ input[type="number"] {
   .filter-bar.hidden {
     max-height: 100vh;
     padding: 12px 14px;
+    max-width: none;
     opacity: 1;
     pointer-events: auto;
   }
@@ -1294,11 +1297,13 @@ input[type="number"] {
 
   .result-bar {
     grid-column: 2;
+    max-width: none;
   }
 
   .result-list {
     grid-column: 2;
     padding: 12px 12px;
+    max-width: none;
     display: flex;
     flex-wrap: wrap;
     align-content: flex-start;
