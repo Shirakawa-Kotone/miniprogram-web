@@ -579,16 +579,16 @@ input[type="number"] {
 }
 
 .card-value.badge {
-  background: #e3f2fd;
-  color: #1565c0;
+  background: #CCEBFF;
+  color: #66CCFF;
   padding: 1px 6px;
   border-radius: 3px;
   font-size: 11px;
 }
 
 .card-value.tag {
-  background: #e8f5e9;
-  color: #2e7d32;
+  background: #d4f0ed;
+  color: var(--primary);
   padding: 1px 6px;
   border-radius: 3px;
   font-size: 11px;
@@ -1098,13 +1098,23 @@ input[type="number"] {
 }
 
 :root.dark-mode .card-value.tag {
-  background: #0d2d3d;
-  color: var(--primary);
+  background: #0a2d2a;
+  color: #39C5BB;
 }
 
 :root.dark-mode .gp-label {
   background: #0d2d3d;
   color: var(--primary);
+}
+
+:root.dark-mode .scroll-select-item {
+  color: var(--text);
+  border-bottom-color: #333;
+}
+
+:root.dark-mode .scroll-select-item.selected {
+  color: #39C5BB;
+  background: #0a2d2a;
 }
 
 :root.dark-mode .row-highlight {
