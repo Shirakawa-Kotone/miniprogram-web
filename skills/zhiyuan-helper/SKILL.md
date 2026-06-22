@@ -109,6 +109,9 @@ node ~/.claude/skills/zhiyuan-helper/query.js --score 620 --sr 物化生 --provi
 # 多关键词：--keyword 可重复使用，任一个匹配即返回（OR 逻辑）
 node ~/.claude/skills/zhiyuan-helper/query.js --score 620 --sr 物化生 --keyword 计算机 --keyword 软件 --keyword 人工智能
 
+# 多省份：--province 可重复使用，去过个省份都查
+node ~/.claude/skills/zhiyuan-helper/query.js --score 620 --sr 物化生 --province 广东 --province 浙江
+
 # 物化政/物化地 → 统一用物化生
 node ~/.claude/skills/zhiyuan-helper/query.js --score 620 --sr 物化生 --province 浙江 --keyword 计算机
 
@@ -138,6 +141,9 @@ node ~/.claude/skills/zhiyuan-helper/query.js --estimate-rank --score 620 --year
 
 用户写 "580分 没排名 物生地 浙江 师范"
 → score=580, sr=物生(物生地→核心物生), province=浙江, keyword=师范
+
+用户写 "580分 想去广东或浙江学计算机"
+→ score=580, sr=不限, province=广东, province=浙江, keyword=计算机
 
 用户写 "630分 历史类 想学法学"
 → 历史方向，回复「历史方向数据暂未收录，敬请期待」，不查数据
@@ -176,17 +182,20 @@ node ~/.claude/skills/zhiyuan-helper/query.js --estimate-rank --score 620 --year
 
 > **历史方向（政/史/地）**：如果用户说的全是历史方向科目（政史地、文科、历史类），直接回复「历史方向数据暂未收录，敬请期待」并结束查询，不调用 query.js。
 
-**省份解析：** 城市自动映射到省份
+**省份解析：** 城市自动映射到省份，用户说多个省份/城市时用多个 `--province`。
 
 ```text
-"深圳" "广州" → 广东
-"杭州" "宁波" → 浙江
-"南京" "苏州" → 江苏
-"成都"       → 四川
-"武汉"       → 湖北
-"长沙"       → 湖南
-"厦门"       → 福建
-"青岛"       → 山东
+"深圳" "广州" → --province 广东
+"杭州" "宁波" → --province 浙江
+"想去广东或浙江" → --province 广东 --province 浙江
+"广东、北京、上海都行" → --province 广东 --province 北京 --province 上海
+"南京" "苏州" → --province 江苏
+"成都"       → --province 四川
+"武汉"       → --province 湖北
+"长沙"       → --province 湖南
+"厦门"       → --province 福建
+"青岛"       → --province 山东
+"不限" "全国" "无偏好"  → 不传 --province
 其他城市名 → 查找映射表，找不到则不传 --province
 ```
 
