@@ -163,6 +163,7 @@ function parseArgs() {
   --keyword <str>    专业组关键词 (可重复, 多关键词 OR 匹配)
   --year <str>       年份 2024|2025|2026
   --limit <n>        上限 (默认 200)
+  --format <fmt>     输出格式: json (默认) 或 markdown
 
 排名估算:
   --estimate-rank --score <n> --year <str> [--sr <str>]
@@ -174,7 +175,7 @@ function parseArgs() {
     process.exit(0)
   }
 
-  const params = { score: null, rank: null, sr: null, province: [], batch: [], keyword: [], year: null, limit: DEFAULT_LIMIT, estimateRank: false }
+  const params = { score: null, rank: null, sr: null, province: [], batch: [], keyword: [], year: null, limit: DEFAULT_LIMIT, estimateRank: false, format: 'json' }
 
   for (let i = 0; i < args.length; i++) {
     const next = () => { const v = args[++i]; if (v === undefined) die(`缺少参数值: ${args[i-1]}`); return v }
@@ -187,6 +188,7 @@ function parseArgs() {
       case '--keyword': params.keyword.push(next()); break
       case '--year': params.year = next(); if (!['2024','2025','2026'].includes(params.year)) die('--year 只能为 2024|2025|2026'); break
       case '--limit': params.limit = parseInt(next()); if (isNaN(params.limit) || params.limit < 1) die('--limit 需要正整数'); break
+      case '--format': params.format = next(); if (!['json','markdown'].includes(params.format)) die('--format 只能为 json|markdown'); break
       case '--estimate-rank': params.estimateRank = true; break
       default: die(`未知参数: ${args[i]}`)
     }
@@ -195,6 +197,26 @@ function parseArgs() {
 }
 
 function die(msg) { console.error(`错误: ${msg}`); process.exit(1) }
+
+// ===== Markdown 格式化输出 =====
+
+function cell(v) { return String(v ?? '').replace(/\|/g, '\\|') }
+
+function formatMarkdown(matched) {
+  const lines = ['| 院校 | 专业组 | 专业组代号 | 选科 | 批次 | 2024分/排名 | 2025分/排名 | 备注 |',
+                 '|------|--------|-----------|------|------|-------------|-------------|------|']
+  for (const school of matched) {
+    for (const g of school.groups) {
+      const srShow = g.srDisplay || '不限'
+      const h24 = g.history?.['2024']
+      const h25 = g.history?.['2025']
+      const s24 = h24 ? (h24.score ?? '') + '/' + (h24.rank ?? '') : '-'
+      const s25 = h25 ? (h25.score ?? '') + '/' + (h25.rank ?? '') : '-'
+      lines.push(`| ${cell(school.school)} | ${cell(g.name)} | ${cell(g.code)} | ${cell(srShow)} | ${cell(g.batch)} | ${cell(s24)} | ${cell(s25)} | ${cell(g.remark)} |`)
+    }
+  }
+  return lines.join('\n')
+}
 
 // ===== 主流程 =====
 
@@ -223,6 +245,11 @@ function main() {
         }
       }
     }
+  }
+
+  if (params.format === 'markdown') {
+    process.stdout.write(formatMarkdown(matched) + '\n')
+    return
   }
 
   const output = {

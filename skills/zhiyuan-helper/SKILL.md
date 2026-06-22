@@ -94,7 +94,7 @@ options:
 
 ### 第二步：查询数据
 
-组装参数运行 `query.js`。**如果用户有专业方向，直接按下方「语义扩展表」一次扩展成多个 `--keyword`，只调用一次 query.js。禁止先查原词再扩展。**
+组装参数运行 `query.js`。**始终加上 `--format markdown`，得到的就是排版好的表格，直接使用。禁止自己重新排版。** 如果用户有专业方向，直接按下方「语义扩展表」一次扩展成多个 `--keyword`，只调用一次 query.js。禁止先查原词再扩展。
 
 ```bash
 node ~/.claude/skills/zhiyuan-helper/query.js [选项]
@@ -103,23 +103,23 @@ node ~/.claude/skills/zhiyuan-helper/query.js [选项]
 常用查询组合（`--sr` 统一用核心组合名，见上方选科映射表）：
 
 ```bash
-# 分数+选科+省份+专业
-node ~/.claude/skills/zhiyuan-helper/query.js --score 620 --sr 物化生 --province 广东 --keyword 计算机
+# 分数+选科+省份+专业（始终加 --format markdown）
+node ~/.claude/skills/zhiyuan-helper/query.js --score 620 --sr 物化生 --province 广东 --keyword 计算机 --format markdown
 
-# 多关键词：--keyword 可重复使用，任一个匹配即返回（OR 逻辑）
-node ~/.claude/skills/zhiyuan-helper/query.js --score 620 --sr 物化生 --keyword 计算机 --keyword 软件 --keyword 人工智能
+# 多关键词：--keyword 可重复使用，OR 逻辑
+node ~/.claude/skills/zhiyuan-helper/query.js --score 620 --sr 物化生 --keyword 计算机 --keyword 软件 --keyword 人工智能 --format markdown
 
-# 多省份：--province 可重复使用，去过个省份都查
-node ~/.claude/skills/zhiyuan-helper/query.js --score 620 --sr 物化生 --province 广东 --province 浙江
+# 多省份：--province 可重复
+node ~/.claude/skills/zhiyuan-helper/query.js --score 620 --sr 物化生 --province 广东 --province 浙江 --format markdown
 
 # 物化政/物化地 → 统一用物化生
-node ~/.claude/skills/zhiyuan-helper/query.js --score 620 --sr 物化生 --province 浙江 --keyword 计算机
+node ~/.claude/skills/zhiyuan-helper/query.js --score 620 --sr 物化生 --province 浙江 --keyword 计算机 --format markdown
 
 # 只有排名
-node ~/.claude/skills/zhiyuan-helper/query.js --rank 8000 --province 北京
+node ~/.claude/skills/zhiyuan-helper/query.js --rank 8000 --province 北京 --format markdown
 
 # 只有分数
-node ~/.claude/skills/zhiyuan-helper/query.js --score 620 --sr 物化生
+node ~/.claude/skills/zhiyuan-helper/query.js --score 620 --sr 物化生 --format markdown
 
 # 先估算排名（如果用户只有分数）
 node ~/.claude/skills/zhiyuan-helper/query.js --estimate-rank --score 620 --year 2025 --sr 物化生
@@ -206,8 +206,8 @@ node ~/.claude/skills/zhiyuan-helper/query.js --estimate-rank --score 620 --year
 不要先查原词再扩展。**直接按下方表格**把用户意向扩展成多个 `--keyword`，**一次查询完成**。`--keyword` 间是 OR 逻辑（匹配任一即返回），无需查多次再手动去重。
 
 ```bash
-# 一次查询多个相关专业，OR 匹配
-node ~/.claude/skills/zhiyuan-helper/query.js --score 620 --sr 物化生 --keyword 计算机 --keyword 软件 --keyword 智能 --keyword 信息
+# 一次查询多个相关专业，OR 匹配，直接输出表格
+node ~/.claude/skills/zhiyuan-helper/query.js --score 620 --sr 物化生 --keyword 计算机 --keyword 软件 --keyword 智能 --keyword 信息 --format markdown
 ```
 
 > **如果用户说了多个专业方向**（如"想学计算机或金融"），按每个方向扩展后合并去重，一次查完。
@@ -255,15 +255,9 @@ node ~/.claude/skills/zhiyuan-helper/query.js --score 620 --sr 物化生 --keywo
 保档: 从大到小（最好的保底优先）
 ```
 
-### 第五步：输出（格式锁死）
+### 第五步：输出（不用自己排版）
 
-**严格遵守以下格式输出，不允许修改列名、列顺序、表结构。**
-
-要求：
-1. **必含列**：院校 | 专业组 | 专业组代号 | 选科 | 批次 | 2024分/排名 | 2025分/排名 | 备注
-2. **2024 和 2025 两列必须同时出现**，缺一不可。某年无数据则留空（如 `| / |`）
-3. 不展示 2026 年任何信息
-4. 每条数据占一行，不要合并行或跨行
+`query.js` 加上 `--format markdown` 后直接输出排版好的表格行。**你只需把脚本输出的行分到「冲」「稳」「保」三档标题下，不需要自己写表格。**
 
 ```
 ## 📊 冲稳保推荐
@@ -271,28 +265,20 @@ node ~/.claude/skills/zhiyuan-helper/query.js --score 620 --sr 物化生 --keywo
 > 考生信息：620分 | 排名约8000 | 物化生 | 意向：广东 计算机
 
 ### 🔥 冲（拼搏）— N 个专业组
-| 院校 | 专业组 | 专业组代号 | 选科 | 批次 | 2024分/排名 | 2025分/排名 | 备注 |
-|------|--------|-----------|------|------|-------------|-------------|------|
-| 华南理工大学 | 计算机类 | 0809 | 物化 | 本科 | 637/2164 | 628/2518 | 不招色盲 |
-| 北京邮电大学 | 通信工程 | 501 | 物化 | 本科 | 625/4095 | 630/2297 | |
-| ... | | | | | | | |
+（把匹配冲档的行贴在这里，直接复制脚本输出的行）
 
 ### ✅ 稳（稳妥）— N 个专业组
-| 院校 | 专业组 | 专业组代号 | 选科 | 批次 | 2024分/排名 | 2025分/排名 | 备注 |
-|------|--------|-----------|------|------|-------------|-------------|------|
-| 南昌大学 | 临床医学 | 501 | 物化 | 本科 | 598/12000 | 605/9800 | |
+（把匹配稳档的行贴在这里）
 
 ### 🛡️ 保（保底）— N 个专业组
-| 院校 | 专业组 | 专业组代号 | 选科 | 批次 | 2024分/排名 | 2025分/排名 | 备注 |
-|------|--------|-----------|------|------|-------------|-------------|------|
-| 华东交通大学 | 土木工程 | 601 | 物化 | 本科 | 572/21000 | 568/23000 | |
+（把匹配保底的行贴在这里）
 ```
 
-> **数据填写规则：**
-> - 格式 `分数/排名`，如 `637/2164`
-> - 某年无数据：该格填 `-`（如 `-/ -` → 即该年无排名无分数）
-> - 有分数无排名：填 `637/ -`
-> - 有排名无分数：填 `-/2164`
+**规则：**
+- 不修改脚本输出的任何单元格内容
+- 2024/2025 两列已由脚本保证同时存在
+- 不展示 2026 年信息
+- 分的档次不对的条目换档即可，不要重写表格
 
 如果信息不全（比如没有选科），在结果开头用引用块说明"本次查询未指定 XX，结果包含所有可能选项，仅供参考"。
 
