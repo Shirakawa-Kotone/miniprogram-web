@@ -214,20 +214,108 @@ function splitName(name) {
   return { base: name, majors: '' }
 }
 
+function row(school, g) {
+  const { base, majors } = splitName(g.name)
+  const srShow = g.srDisplay || '不限'
+  const h24 = g.history?.['2024']
+  const h25 = g.history?.['2025']
+  const s24 = h24 ? (h24.score ?? '') + '/' + (h24.rank ?? '') : '-'
+  const s25 = h25 ? (h25.score ?? '') + '/' + (h25.rank ?? '') : '-'
+  return `| ${cell(school.school)} | ${cell(school.code)} | ${cell(base)} | ${cell(majors)} | ${cell(g.code)} | ${cell(srShow)} | ${cell(g.batch)} | ${cell(s24)} | ${cell(s25)} | ${cell(g.remark)} |`
+}
+
+const TABLE_HEADER = '| 院校 | 院校代号 | 专业组 | 包含专业 | 专业组代号 | 选科 | 批次 | 2024分/排名 | 2025分/排名 | 备注 |'
+const TABLE_SEP    = '|------|---------|--------|---------|-----------|------|------|-------------|-------------|------|'
+
 function formatMarkdown(matched) {
-  const lines = ['| 院校 | 院校代号 | 专业组 | 包含专业 | 专业组代号 | 选科 | 批次 | 2024分/排名 | 2025分/排名 | 备注 |',
-                 '|------|---------|--------|---------|-----------|------|------|-------------|-------------|------|']
+  const lines = [TABLE_HEADER, TABLE_SEP]
   for (const school of matched) {
     for (const g of school.groups) {
-      const { base, majors } = splitName(g.name)
-      const srShow = g.srDisplay || '不限'
-      const h24 = g.history?.['2024']
-      const h25 = g.history?.['2025']
-      const s24 = h24 ? (h24.score ?? '') + '/' + (h24.rank ?? '') : '-'
-      const s25 = h25 ? (h25.score ?? '') + '/' + (h25.rank ?? '') : '-'
-      lines.push(`| ${cell(school.school)} | ${cell(school.code)} | ${cell(base)} | ${cell(majors)} | ${cell(g.code)} | ${cell(srShow)} | ${cell(g.batch)} | ${cell(s24)} | ${cell(s25)} | ${cell(g.remark)} |`)
+      lines.push(row(school, g))
     }
   }
+  return lines.join('\n')
+}
+
+// ===== 冲稳保分档 =====
+
+function classify(matched, score, rank) {
+  // 返回 { chong: [{school, group}], wen: [...], bao: [...] }
+  const buckets = { chong: [], wen: [], bao: [] }
+
+  for (const school of matched) {
+    for (const g of school.groups) {
+      const h24 = g.history?.['2024']
+      const h25 = g.history?.['2025']
+
+      if (rank) {
+        const best = Math.min(h24?.rank ?? Infinity, h25?.rank ?? Infinity)
+        if (best === Infinity) continue
+        if (best < rank * 0.92) buckets.chong.push({ school, group: g })
+        else if (best <= rank * 1.08) buckets.wen.push({ school, group: g })
+        else buckets.bao.push({ school, group: g })
+      } else if (score) {
+        const best = Math.max(h24?.score ?? -Infinity, h25?.score ?? -Infinity)
+        if (best === -Infinity) continue
+        if (best > score + 5) buckets.chong.push({ school, group: g })
+        else if (best >= score - 5) buckets.wen.push({ school, group: g })
+        else buckets.bao.push({ school, group: g })
+      } else {
+        continue
+      }
+    }
+  }
+
+  // 各档内排序
+  // 冲：差距从小到大
+  buckets.chong.sort((a, b) => tierOrderAsc(a, b, score, rank))
+  // 稳：从大到小（接近冲的先展示）
+  buckets.wen.sort((a, b) => tierOrderDesc(a, b, score, rank))
+  // 保：从大到小（最好的保底优先）
+  buckets.bao.sort((a, b) => tierOrderDesc(a, b, score, rank))
+
+  return buckets
+}
+
+function tierBestScore(item, score, rank) {
+  const h24 = item.group.history?.['2024']
+  const h25 = item.group.history?.['2025']
+  if (rank) return Math.min(h24?.rank ?? Infinity, h25?.rank ?? Infinity)
+  return Math.max(h24?.score ?? -Infinity, h25?.score ?? -Infinity)
+}
+
+function tierOrderAsc(a, b, score, rank) {
+  return tierBestScore(a, score, rank) - tierBestScore(b, score, rank)
+}
+
+function tierOrderDesc(a, b, score, rank) {
+  return tierBestScore(b, score, rank) - tierBestScore(a, score, rank)
+}
+
+function formatClassified(buckets, score, rank) {
+  const lines = []
+  const params = []
+  if (score) params.push(score + '分')
+  if (rank) params.push('排名约' + rank)
+
+  const tierLabel = { chong: '🔥 冲（拼搏）', wen: '✅ 稳（稳妥）', bao: '🛡️ 保（保底）' }
+
+  for (const t of ['chong', 'wen', 'bao']) {
+    const items = buckets[t]
+    if (!items.length) {
+      lines.push('### ' + tierLabel[t] + ' — 暂无')
+      lines.push('')
+      continue
+    }
+    lines.push('### ' + tierLabel[t] + ' — ' + items.length + ' 个专业组')
+    lines.push(TABLE_HEADER)
+    lines.push(TABLE_SEP)
+    for (const { school, group: g } of items) {
+      lines.push(row(school, g))
+    }
+    lines.push('')
+  }
+
   return lines.join('\n')
 }
 
@@ -261,7 +349,12 @@ function main() {
   }
 
   if (params.format === 'markdown') {
-    process.stdout.write(formatMarkdown(matched) + '\n')
+    if (params.score || params.rank) {
+      const buckets = classify(matched, params.score, params.rank)
+      process.stdout.write(formatClassified(buckets, params.score, params.rank) + '\n')
+    } else {
+      process.stdout.write(formatMarkdown(matched) + '\n')
+    }
     return
   }
 
