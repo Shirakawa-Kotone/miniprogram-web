@@ -77,7 +77,19 @@ options:
     description: "全国都行"
 ```
 
-**问题 4：专业方向**（可选）
+**问题 4：批次**（可选）
+
+```
+header: "批次"
+question: "想报哪个批次？在「其他」中填写"
+options:
+  - label: "填写批次"
+    description: "如：本科、专科、提前本科"
+  - label: "无偏好"
+    description: "都行"
+```
+
+**问题 5：专业方向**（可选）
 
 ```
 header: "专业"
@@ -89,8 +101,24 @@ options:
     description: "什么专业都行"
 ```
 
+**问题 6：中外合作办学**（可选）
+
+```
+header: "中外合作"
+question: "是否能接受中外合作办学专业？"
+options:
+  - label: "接受"
+    description: "中外合作办学也可以"
+  - label: "不接受"
+    description: "只看普通专业"
+  - label: "不确定"
+    description: "有合适的也可以看看"
+```
+
 > 分数/排名是必需的，其他信息用户不知道可以不填，在结果开头注明"未指定XX，结果不限制该条件"。
 > 所有问题的「其他」输入框内自由填写即可，如"620分 8000名"、"物理化学"、"广东浙江"。
+> 
+> **中外合作办学处理**：如果用户不接受，查数据时在备注中过滤含「中外合作」的行。如果接受或不确定，不过滤。
 
 ### 第二步：查询数据
 
@@ -108,6 +136,9 @@ node ~/.claude/skills/zhiyuan-helper/query.js --score 620 --sr 物化生 --provi
 
 # 多关键词：--keyword 可重复使用，OR 逻辑
 node ~/.claude/skills/zhiyuan-helper/query.js --score 620 --sr 物化生 --keyword 计算机 --keyword 软件 --keyword 人工智能
+
+# 指定批次：--batch 可重复（本科、专科、提前本科）
+node ~/.claude/skills/zhiyuan-helper/query.js --score 620 --sr 物化生 --batch 本科
 
 # 多省份：--province 可重复
 node ~/.claude/skills/zhiyuan-helper/query.js --score 620 --sr 物化生 --province 广东 --province 浙江
