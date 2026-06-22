@@ -213,8 +213,8 @@ function main() {
 
   const matched = filterSchools(schools, params)
 
-  // 补全缺失年份，确保始终有 2024/2025/2026 键
-  const allYears = ['2024', '2025', '2026']
+  // 补全缺失年份，确保始终有 2024/2025 键
+  const allYears = ['2024', '2025']
   for (const school of matched) {
     for (const g of school.groups) {
       for (const y of allYears) {

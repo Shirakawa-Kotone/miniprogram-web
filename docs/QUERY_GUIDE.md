@@ -63,8 +63,7 @@ node docs/build-data.js
       "remark": "",
       "history": {
         "2024": { "score": 637, "rank": 2164, "count": 5 },
-        "2025": { "score": 628, "rank": 2518, "count": 6 },
-        "2026": null          // 无数据时为 null
+        "2025": { "score": 628, "rank": 2518, "count": 6 }
       }
     }]
   }]
