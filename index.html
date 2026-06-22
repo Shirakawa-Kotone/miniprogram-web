@@ -130,39 +130,48 @@
 
       <!-- 志愿填报辅助 -->
       <div class="assistant-section" id="assistant-section">
-        <div class="assistant-title">📋 志愿填报辅助</div>
-        <div class="as-row">
-          <div class="as-half">
-            <span class="as-label">高考分数</span>
-            <input class="input input-sm" type="number" placeholder="如 620" id="as-score" />
-          </div>
-          <div class="as-half">
-            <span class="as-label">全省排名</span>
-            <input class="input input-sm" type="number" placeholder="如 8000" id="as-rank" />
-          </div>
+        <div class="as-toggle-row" id="as-toggle-row">
+          <span class="as-toggle-title">📋 志愿填报辅助</span>
+          <span class="as-toggle-arrow" id="as-toggle-arrow">
+            <svg width="12" height="8" viewBox="0 0 12 8">
+              <path d="M1 1l5 5 5-5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/>
+            </svg>
+          </span>
         </div>
-        <div class="as-row">
-          <div class="as-half">
-            <span class="as-label">选科要求</span>
-            <div class="picker picker-sm" id="as-sr">
-              <span id="as-sr-label" class="placeholder-text">请选择你的选科</span>
+        <div class="as-body" id="as-body">
+          <div class="as-row">
+            <div class="as-half">
+              <span class="as-label">高考分数</span>
+              <input class="input input-sm" type="number" placeholder="如 620" id="as-score" />
+            </div>
+            <div class="as-half">
+              <span class="as-label">全省排名</span>
+              <input class="input input-sm" type="number" placeholder="如 8000" id="as-rank" />
             </div>
           </div>
-          <div class="as-half">
-            <span class="as-label">地区偏好</span>
-            <div class="picker picker-sm" id="as-region">
-              <span id="as-region-label">全部省份</span>
+          <div class="as-row">
+            <div class="as-half">
+              <span class="as-label">选科要求</span>
+              <div class="picker picker-sm" id="as-sr">
+                <span id="as-sr-label" class="placeholder-text">请选择你的选科</span>
+              </div>
+            </div>
+            <div class="as-half">
+              <span class="as-label">地区偏好</span>
+              <div class="picker picker-sm" id="as-region">
+                <span id="as-region-label">全部省份</span>
+              </div>
             </div>
           </div>
-        </div>
-        <div class="as-row">
-          <div class="as-full">
-            <span class="as-label">专业意向</span>
-            <input class="input input-sm" placeholder="如 计算机、医学" id="as-keyword" />
+          <div class="as-row">
+            <div class="as-full">
+              <span class="as-label">专业意向</span>
+              <input class="input input-sm" placeholder="如 计算机、医学" id="as-keyword" />
+            </div>
           </div>
-        </div>
-        <div class="as-action">
-          <button class="btn btn-search" id="btn-assistant">开始推荐</button>
+          <div class="as-action">
+            <button class="btn btn-search" id="btn-assistant">开始推荐</button>
+          </div>
         </div>
       </div>
     </div>

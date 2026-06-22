@@ -1765,6 +1765,23 @@ function toggleMobileAssistant() {
 }
 
 // ============================================================
+// 志愿填报辅助 — 桌面端折叠/展开
+// ============================================================
+function toggleAssistantCollapse() {
+  DOM.assistantSection.classList.toggle('collapsed')
+}
+
+function checkAssistantOverflow() {
+  // 仅在桌面端生效
+  if (window.innerWidth < 860) return
+  const fb = DOM.filterBar
+  // 如果内容溢出且当前未折叠，自动折叠
+  if (fb.scrollHeight > fb.clientHeight && !DOM.assistantSection.classList.contains('collapsed')) {
+    DOM.assistantSection.classList.add('collapsed')
+  }
+}
+
+// ============================================================
 // 初始化与事件绑定
 // ============================================================
 function initDOM() {
@@ -1860,6 +1877,8 @@ function initDOM() {
 
     // Assistant section (filter bar)
     assistantSection: document.getElementById('assistant-section'),
+    asToggleRow: document.getElementById('as-toggle-row'),
+    asBody: document.getElementById('as-body'),
     // Assistant
     asScore: document.getElementById('as-score'),
     asRank: document.getElementById('as-rank'),
@@ -2027,11 +2046,15 @@ function bindEvents() {
     if (e.key === 'Enter') startAssistant()
   })
 
-  // Resize handler for assistant layout
+  // Assistant section collapse toggle
+  DOM.asToggleRow.addEventListener('click', toggleAssistantCollapse)
+
+  // Resize handlers
   window.addEventListener('resize', function () {
     if (DOM.assistantResults.style.display !== 'none') {
       updateAssistantLayout()
     }
+    checkAssistantOverflow()
   })
 }
 
@@ -2084,6 +2107,8 @@ function init() {
 
               // 初始搜索
               doSearch()
+              // 桌面端检测助手区是否溢出
+              setTimeout(checkAssistantOverflow, 300)
             }, 200)
           }, 80)
         }, 80)

@@ -620,15 +620,51 @@ input[type="number"] {
   display: none;
   flex-shrink: 0;
   border-top: 1px solid var(--border);
-  padding: 10px;
   background: var(--card-bg);
 }
 
-.assistant-title {
+.as-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.as-toggle-title {
   font-size: 13px;
   font-weight: bold;
   color: var(--primary);
-  margin-bottom: 8px;
+}
+
+.as-toggle-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  color: var(--text-muted);
+  transition: transform .25s ease;
+  flex-shrink: 0;
+}
+
+.as-toggle-arrow svg {
+  display: block;
+}
+
+/* 折叠状态：箭头向上翻转（指向展开方向） */
+.assistant-section.collapsed .as-toggle-arrow svg {
+  transform: rotate(180deg);
+}
+
+.assistant-section.collapsed .as-body {
+  display: none;
+}
+
+.as-body {
+  padding: 0 10px 10px;
 }
 
 .as-row {
