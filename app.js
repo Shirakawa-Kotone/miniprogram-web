@@ -25,6 +25,32 @@ const SEARCH_DEBOUNCE = 200
 const MOON_SVG = '<svg viewBox="0 0 24 24" width="1.2em" height="1.2em"><path fill="currentColor" d="M7.5 2c-1.79 1.15-3 3.18-3 5.5s1.21 4.35 3.03 5.5C4.46 13 2 10.54 2 7.5A5.5 5.5 0 0 1 7.5 2m11.57 1.5l1.43 1.43L4.93 20.5L3.5 19.07zm-6.18 2.43L11.41 5L9.97 6l.42-1.7L9 3.24l1.75-.12l.58-1.65L12 3.1l1.73.03l-1.35 1.13zm-3.3 3.61l-1.16-.73l-1.12.78l.34-1.32l-1.09-.83l1.36-.09l.45-1.29l.51 1.27l1.36.03l-1.05.87zM19 13.5a5.5 5.5 0 0 1-5.5 5.5c-1.22 0-2.35-.4-3.26-1.07l7.69-7.69c.67.91 1.07 2.04 1.07 3.26m-4.4 6.58l2.77-1.15l-.24 3.35zm4.33-2.7l1.15-2.77l2.2 2.54zm1.15-4.96l-1.14-2.78l3.34.24zM9.63 18.93l2.77 1.15l-2.53 2.19z"></path></svg>'
 
 // ============================================================
+// 志愿填报辅助 — 地区定义
+// ============================================================
+const REGIONS = {
+  '全部省份': null,
+  '东部沿海': ['辽宁','河北','天津','山东','江苏','上海','浙江','福建','广东'],
+  '长三角': ['上海','江苏','浙江'],
+  '珠三角': ['广东'],
+  '京津冀': ['北京','天津','河北'],
+  '江浙沪': ['江苏','浙江','上海'],
+  '北上广': ['北京','上海','广东'],
+  '长江以南': ['上海','江苏','浙江','安徽','福建','江西','湖北','湖南','广东','广西','海南','重庆','四川','贵州','云南','西藏'],
+  '长江以北': ['北京','天津','河北','山西','内蒙古','辽宁','吉林','黑龙江','山东','河南','陕西','甘肃','青海','宁夏','新疆'],
+  '华中': ['河南','湖北','湖南'],
+  '东北': ['辽宁','吉林','黑龙江'],
+  '西北': ['陕西','甘肃','青海','宁夏','新疆'],
+  '西南': ['重庆','四川','贵州','云南','西藏'],
+  '本省': ['江西'],
+  '除了本省': ['北京','天津','河北','山西','内蒙古','辽宁','吉林','黑龙江','上海','江苏','浙江','安徽','福建','山东','河南','湖北','湖南','广东','广西','海南','重庆','四川','贵州','云南','西藏','陕西','甘肃','青海','宁夏','新疆','香港'],
+}
+const REGION_NAMES = Object.keys(REGIONS)
+
+// 辅助面板选科选项（3+1+2 实际组合）
+const AS_SR_LIST = ['物化生', '物化政', '物化地', '物政生', '物政地', '物生地']
+const AS_SR_CODES = ['04*05*06', '04*05', '04*05', '04*06', '04', '04*06']
+
+// ============================================================
 // 应用状态
 // ============================================================
 const state = {
@@ -303,6 +329,12 @@ function computeDiffs(g, vr) {
 // ============================================================
 function doSearch() {
   if (!state.loaded) return
+
+  // 若处于志愿推荐模式，退出并执行常规搜索
+  if (DOM.assistantResults.style.display !== 'none') {
+    exitAssistant()
+  }
+
   const t0 = Date.now()
 
   const { year, selectedProvinces, selectedBatches, code, name, srIdx, groupName, groupCode, minScore, maxRank, only2026, hideSports, hideCoop } = state
@@ -785,10 +817,21 @@ function doReset() {
 }
 
 function scrollToTop() {
-  state.filterHidden = false
-  updateFilterUI()
-  DOM.resultList.scrollTop = 0
-  DOM.resultList.querySelector('#result-top').scrollIntoView()
+  if (_mobileAssistantActive) {
+    // 志愿推荐模式 → 滚动活跃列到顶部
+    const activeBody = DOM.asColumns.querySelector('.as-column.active .as-column-body')
+    if (activeBody) {
+      activeBody.scrollTop = 0
+    } else {
+      DOM.asColumns.scrollTop = 0
+    }
+  } else {
+    // 正常搜索模式
+    state.filterHidden = false
+    updateFilterUI()
+    DOM.resultList.scrollTop = 0
+    DOM.resultList.querySelector('#result-top').scrollIntoView()
+  }
 }
 
 // ============================================================
@@ -1333,6 +1376,395 @@ function renderTutorialDiffs(diffs) {
 }
 
 // ============================================================
+// 志愿填报辅助
+// ============================================================
+
+// Assistant SR and region state
+let asSrIdx = -1  // -1 = 未选择
+let asRegionIdx = 0
+let _mobileAssistantActive = false  // 手机端志愿推荐模式是否激活
+
+function openAssistantSR() {
+  renderASSRList()
+  DOM.asSrModal.style.display = 'flex'
+}
+
+function renderASSRList() {
+  const list = DOM.asSrList
+  list.innerHTML = ''
+  for (let i = 0; i < AS_SR_LIST.length; i++) {
+    const item = document.createElement('div')
+    item.className = 'scroll-select-item' + (asSrIdx === i ? ' selected' : '')
+    item.textContent = AS_SR_LIST[i]
+    item.dataset.idx = i
+    item.addEventListener('click', function () {
+      asSrIdx = parseInt(this.dataset.idx)
+      renderASSRList()
+    })
+    list.appendChild(item)
+  }
+  // 分隔 + 历史方向提示
+  const divider = document.createElement('div')
+  divider.className = 'scroll-select-item disabled'
+  divider.textContent = '─ 历史方向暂不支持 ─'
+  divider.style.cssText = 'color:var(--text-muted);font-size:11px;text-align:center;pointer-events:none;'
+  list.appendChild(divider)
+}
+
+function confirmASSR() {
+  DOM.asSrModal.style.display = 'none'
+  if (asSrIdx >= 0) {
+    DOM.asSrLabel.textContent = AS_SR_LIST[asSrIdx]
+    DOM.asSrLabel.className = ''
+  }
+}
+
+function openAssistantRegion() {
+  renderRegionList()
+  DOM.regionModal.style.display = 'flex'
+}
+
+function renderRegionList() {
+  const list = DOM.regionList
+  list.innerHTML = ''
+  for (let i = 0; i < REGION_NAMES.length; i++) {
+    const item = document.createElement('div')
+    item.className = 'scroll-select-item' + (asRegionIdx === i ? ' selected' : '')
+    item.textContent = REGION_NAMES[i]
+    item.dataset.idx = i
+    item.addEventListener('click', function () {
+      asRegionIdx = parseInt(this.dataset.idx)
+      renderRegionList()
+    })
+    list.appendChild(item)
+  }
+}
+
+function confirmRegionPicker() {
+  DOM.regionModal.style.display = 'none'
+  DOM.asRegionLabel.textContent = REGION_NAMES[asRegionIdx]
+  DOM.asRegionLabel.className = asRegionIdx === 0 ? 'placeholder-text' : ''
+}
+
+function getBestScore(group) {
+  const scores = []
+  if (group.d && group.d.s) scores.push(group.d.s)
+  if (group.a && group.a.s) scores.push(group.a.s)
+  if (group.b && group.b.s) scores.push(group.b.s)
+  return scores.length ? Math.max(...scores) : null
+}
+
+function calculateTier(userScore, userRank, group) {
+  // Priority 1: 2026 estimated rank, with deviation check
+  if (userRank && group.d && group.d.r) {
+    const rankOk = Math.abs(group.d.r - userRank) / userRank <= 0.15
+    let deviationOk
+    if (userScore && group.d.s) {
+      deviationOk = Math.abs(group.d.s - userScore) <= 20 && rankOk
+    } else {
+      deviationOk = rankOk
+    }
+    if (deviationOk) {
+      const ratio = group.d.r / userRank
+      if (ratio < 0.92) return '冲'
+      if (ratio <= 1.08) return '稳'
+      // 保双重熔断：分数 > userScore-15 且 排名 ≤ max(userRank×130%, userRank+3000)
+      const rankCap = Math.max(userRank * 1.30, userRank + 3000)
+      if (group.d.r > rankCap) return null
+      if (userScore) {
+        const bestScore = getBestScore(group)
+        if (bestScore !== null && bestScore < userScore - 15) return null
+      }
+      return '保'
+    }
+  }
+
+  // Priority 2: 2024/2025 average rank
+  if (userRank) {
+    const ranks = []
+    if (group.a && group.a.r) ranks.push(group.a.r)
+    if (group.b && group.b.r) ranks.push(group.b.r)
+    if (ranks.length > 0) {
+      const avgRank = ranks.reduce((a, b) => a + b, 0) / ranks.length
+      const ratio = avgRank / userRank
+      if (ratio < 0.92) return '冲'
+      if (ratio <= 1.08) return '稳'
+      // 保双重熔断
+      const rankCap = Math.max(userRank * 1.30, userRank + 3000)
+      if (avgRank > rankCap) return null
+      if (userScore) {
+        const bestScore = getBestScore(group)
+        if (bestScore !== null && bestScore < userScore - 15) return null
+      }
+      return '保'
+    }
+  }
+
+  // Priority 3: Score-based fallback
+  if (userScore) {
+    const scores = []
+    if (group.d && group.d.s) scores.push(group.d.s)
+    if (group.a && group.a.s) scores.push(group.a.s)
+    if (group.b && group.b.s) scores.push(group.b.s)
+    if (scores.length > 0) {
+      const bestScore = Math.max(...scores)
+      if (bestScore > userScore + 5) return '冲'
+      if (bestScore >= userScore - 5) return '稳'
+      return '保'
+    }
+  }
+
+  return null
+}
+
+function subjectMatch(userSr, groupSr) {
+  if (!groupSr) return true
+  const userCodes = new Set(parseSrCodes(userSr))
+  const groupCodes = parseSrCodes(groupSr)
+  if (groupCodes.length === 0) return true
+  return groupCodes.every(c => userCodes.has(c))
+}
+
+function parseSrCodes(sr) {
+  if (!sr || sr === '不限') return []
+  if (sr.includes('*')) return sr.split('*').filter(Boolean)
+  const map = { '物': '04', '理': '04', '化': '05', '生': '06' }
+  const chars = sr.replace(/[+\s]/g, '')
+  const codes = []
+  for (const ch of chars) {
+    const c = map[ch]
+    if (c) codes.push(c)
+  }
+  return [...new Set(codes)]
+}
+
+function startAssistant() {
+  // Guard: data not loaded
+  if (!state.loaded || !state.mergedCache) {
+    DOM.asColumns.innerHTML = '<div class="as-empty">数据加载中，请稍候...</div>'
+    showAssistantMode()
+    return
+  }
+  // Read inputs
+  const score = parseInt(DOM.asScore.value) || 0
+  const rank = parseInt(DOM.asRank.value) || 0
+  const srCode = asSrIdx >= 0 ? AS_SR_CODES[asSrIdx] : ''
+  const regionProvinces = REGIONS[REGION_NAMES[asRegionIdx]]
+  const keyword = String(DOM.asKeyword.value).trim()
+
+  if (!score && !rank) {
+    DOM.asColumns.innerHTML = '<div class="as-empty">请输入高考分数或全省排名</div>'
+    showAssistantMode()
+    return
+  }
+
+  // 过滤 mergedCache（仅推荐 2026 年有招生计划的专业组）
+  const results = { '冲': [], '稳': [], '保': [] }
+  const data = state.mergedCache || []
+
+  for (let i = 0; i < data.length; i++) {
+    const g = data[i]
+
+    // 仅推荐 2026 年有招生计划的专业组
+    if (!g.d) continue
+
+    // Region filter
+    if (regionProvinces && regionProvinces.indexOf(g.p) === -1) continue
+
+    // Subject filter (减量匹配：考生选科 ⊇ 专业要求)
+    if (srCode && !subjectMatch(srCode, g.s)) continue
+
+    // 专业名搜索（多项用空格分隔，OR 匹配）
+    if (keyword) {
+      const kws = keyword.split(/\s+/).filter(Boolean)
+      const matchAny = kws.some(function(kw) { return g.g.indexOf(kw) !== -1 })
+      if (!matchAny) continue
+    }
+
+    // Skip sports/coop based on existing filters
+    if (state.hideSports && (g.g.indexOf('体育') !== -1 || g.n.indexOf('体育') !== -1)) continue
+    if (state.hideCoop && (g.g.indexOf('中外合作') !== -1 || (g.remark && g.remark.indexOf('中外合作') !== -1))) continue
+
+    // Calculate tier
+    const tier = calculateTier(score, rank, g)
+    if (tier && results[tier]) {
+      results[tier].push(g)
+    }
+  }
+
+  // Sort within each tier（保：从高到低，冲/稳：从低到高）
+  for (const t of ['冲', '稳', '保']) {
+    const order = t === '保' ? -1 : 1
+    results[t].sort((a, b) => {
+      const sa = Number((b.d || b.b || b.a || {}).s || 0)
+      const sb = Number((a.d || a.b || a.a || {}).s || 0)
+      return order * (sb - sa)
+    })
+  }
+
+  renderAssistantResults(results, score, rank)
+  showAssistantMode()
+}
+
+function renderAssistantResults(results, userScore, userRank) {
+  const container = DOM.asColumns
+  const tiers = ['冲', '稳', '保']
+  const labels = { '冲': '冲', '稳': '稳', '保': '保' }
+  const classes = { '冲': 'reach', '稳': 'safe', '保': 'fallback' }
+
+  const total = tiers.reduce((s, t) => s + results[t].length, 0)
+
+  if (total === 0) {
+    container.innerHTML = '<div class="as-empty">未找到匹配的院校和专业，请调整输入条件后重试</div>'
+    return
+  }
+
+  container.innerHTML = ''
+  const oldRemarkExpanded = state.remarkExpanded
+  state.remarkExpanded = {}
+
+  // Build tab bar
+  const tabBar = document.createElement('div')
+  tabBar.className = 'as-tab-bar'
+  tabBar.id = 'as-tab-bar'
+  for (const t of tiers) {
+    const count = results[t].length
+    const tab = document.createElement('span')
+    tab.className = 'as-tab ' + classes[t] + (t === '冲' ? ' active' : '')
+    tab.dataset.tier = t
+    tab.textContent = labels[t] + ' (' + count + ')'
+    tabBar.appendChild(tab)
+  }
+  container.appendChild(tabBar)
+
+  // Build columns
+  for (const t of tiers) {
+    const items = results[t]
+    const isActive = t === '冲'
+
+    const col = document.createElement('div')
+    col.className = 'as-column' + (isActive ? ' active' : '')
+    col.dataset.tier = t
+
+    const header = document.createElement('div')
+    header.className = 'as-column-header ' + classes[t]
+    header.innerHTML = labels[t] + ' <span style="font-weight:normal;font-size:12px">' + items.length + '个专业组</span>'
+    col.appendChild(header)
+
+    const body = document.createElement('div')
+    body.className = 'as-column-body'
+    // 列体滚动 → 显示/隐藏返回顶部按钮
+    body.addEventListener('scroll', function () {
+      if (_mobileAssistantActive) {
+        DOM.floatBtn.style.display = this.scrollTop > 300 ? 'flex' : 'none'
+      }
+    })
+
+    for (let i = 0; i < items.length; i++) {
+      const g = items[i]
+      // 复用标准卡片渲染
+      const card = renderCardGrouped(g, 'as-' + t + '-' + i)
+      body.appendChild(card)
+    }
+
+    if (items.length === 0) {
+      const empty = document.createElement('div')
+      empty.className = 'as-empty'
+      empty.style.padding = '20px 0'
+      empty.textContent = '该档暂无推荐'
+      body.appendChild(empty)
+    }
+
+    col.appendChild(body)
+    container.appendChild(col)
+  }
+
+  state.remarkExpanded = oldRemarkExpanded
+  updateAssistantLayout()
+
+  // Bind tab switching
+  const tabs = container.querySelectorAll('.as-tab')
+  tabs.forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      const tier = this.dataset.tier
+      container.querySelectorAll('.as-tab').forEach(function (t) { t.classList.remove('active') })
+      this.classList.add('active')
+      container.querySelectorAll('.as-column').forEach(function (c) {
+        c.classList.toggle('active', c.dataset.tier === tier)
+      })
+      // 切换列时检查新列的滚动位置
+      const activeBody = container.querySelector('.as-column.active .as-column-body')
+      if (activeBody) {
+        DOM.floatBtn.style.display = activeBody.scrollTop > 300 ? 'flex' : 'none'
+      }
+    })
+  })
+}
+
+function updateAssistantLayout() {
+  const container = DOM.asColumns
+  if (!container) return
+  // If right-col width < 500px, add tab-mode class
+  const rightCol = container.closest('.right-col')
+  if (rightCol) {
+    const w = rightCol.offsetWidth
+    container.classList.toggle('tab-mode', w < 500)
+  }
+}
+
+function showAssistantMode() {
+  DOM.resultBar.style.display = 'none'
+  DOM.resultList.style.display = 'none'
+  DOM.assistantResults.style.display = 'flex'
+  DOM.assistantResults.style.flex = '1'
+}
+
+function exitAssistant() {
+  DOM.resultBar.style.display = ''
+  DOM.resultList.style.display = ''
+  DOM.assistantResults.style.display = 'none'
+  // 重置切换按钮文字
+  DOM.btnAsToggle.textContent = '志愿推荐'
+  _mobileAssistantActive = false
+  // 手机端：恢复被隐藏的筛选行和年份选项卡
+  if (window.innerWidth < 860) {
+    DOM.assistantSection.style.display = ''
+    const rows = DOM.filterFields.querySelectorAll('.filter-row')
+    for (let i = 1; i < rows.length; i++) {
+      rows[i].style.display = ''
+    }
+    DOM.yearTabs.style.display = ''
+  }
+}
+
+function toggleMobileAssistant() {
+  if (_mobileAssistantActive) {
+    exitAssistant()
+    return
+  }
+  // 进入志愿推荐模式
+  _mobileAssistantActive = true
+  DOM.btnAsToggle.textContent = '返回搜索'
+  // 手机端专有布局调整
+  if (window.innerWidth < 860) {
+    // 确保筛选栏展开
+    DOM.filterBar.classList.remove('hidden')
+    state.filterHidden = false
+    DOM.toggleFilter.textContent = '收起筛选'
+    // 隐藏其他筛选行，保留年份选项卡行
+    const rows = DOM.filterFields.querySelectorAll('.filter-row')
+    for (let i = 1; i < rows.length; i++) {
+      rows[i].style.display = 'none'
+    }
+    // 隐藏年份选项卡中的全部和年份
+    DOM.yearTabs.style.display = 'none'
+    DOM.assistantSection.style.display = 'block'
+  }
+  // 切换右侧结果区到志愿推荐模式
+  startAssistant()
+}
+
+// ============================================================
 // 初始化与事件绑定
 // ============================================================
 function initDOM() {
@@ -1346,6 +1778,7 @@ function initDOM() {
 
     // Filter bar
     filterBar: document.getElementById('filter-bar'),
+    filterFields: document.getElementById('filter-fields'),
     yearTabs: document.getElementById('year-tabs'),
     inputCode: document.getElementById('input-code'),
     inputName: document.getElementById('input-name'),
@@ -1404,6 +1837,9 @@ function initDOM() {
     btnPrev: document.getElementById('btn-prev'),
     btnNext: document.getElementById('btn-next'),
 
+    // Mobile assistant toggle
+    btnAsToggle: document.getElementById('btn-as-toggle'),
+
     // Help
     btnDarkMode: document.getElementById('btn-dark-mode'),
     btnHelp: document.getElementById('btn-help'),
@@ -1411,6 +1847,32 @@ function initDOM() {
     btnHelpBar: document.getElementById('btn-help-bar'),
     btnFeedbackBar: document.getElementById('btn-feedback-bar'),
     btnDarkModeBar: document.getElementById('btn-dark-mode-bar'),
+
+    // Assistant SR picker
+    asSrModal: document.getElementById('as-sr-modal'),
+    asSrList: document.getElementById('as-sr-list'),
+    btnConfirmASSR: document.getElementById('btn-confirm-as-sr'),
+
+    // Region picker
+    regionModal: document.getElementById('region-modal'),
+    regionList: document.getElementById('region-list'),
+    btnConfirmRegion: document.getElementById('btn-confirm-region'),
+
+    // Assistant section (filter bar)
+    assistantSection: document.getElementById('assistant-section'),
+    // Assistant
+    asScore: document.getElementById('as-score'),
+    asRank: document.getElementById('as-rank'),
+    asSrLabel: document.getElementById('as-sr-label'),
+    asSr: document.getElementById('as-sr'),
+    asRegionLabel: document.getElementById('as-region-label'),
+    asRegion: document.getElementById('as-region'),
+    asKeyword: document.getElementById('as-keyword'),
+    btnAssistant: document.getElementById('btn-assistant'),
+    btnExitAssistant: document.getElementById('btn-exit-assistant'),
+    assistantResults: document.getElementById('assistant-results'),
+    asColumns: document.getElementById('as-columns'),
+    resultBar: document.getElementById('result-bar'),
   }
 }
 
@@ -1467,6 +1929,9 @@ function bindEvents() {
   document.getElementById('toggle-hide-coop').addEventListener('click', onToggleHideCoop)
   DOM.btnDarkMode.addEventListener('click', onToggleDarkMode)
 
+  // Mobile assistant toggle
+  DOM.btnAsToggle.addEventListener('click', toggleMobileAssistant)
+
   // Search / Reset
   DOM.btnSearch.addEventListener('click', function () {
     syncStateFromInputs()
@@ -1496,6 +1961,9 @@ function bindEvents() {
     DOM.floatBtn.style.display = scrollTop > 300 ? 'flex' : 'none'
     lastScrollTop = scrollTop
   })
+
+  // 志愿推荐模式滚动 → 显示/隐藏返回顶部按钮（通过列体直接绑定）
+  // 实际绑定在 renderAssistantResults 中创建列体时完成
 
   // Help button
   DOM.btnHelp.addEventListener('click', function () {
@@ -1530,6 +1998,40 @@ function bindEvents() {
   // Click overlay to close tutorial
   DOM.tutorialOverlay.addEventListener('click', function (e) {
     if (e.target === this) finishTutorialAndStart()
+  })
+
+  // Assistant — SR picker (独立弹窗)
+  DOM.asSr.addEventListener('click', openAssistantSR)
+  DOM.asSrModal.addEventListener('click', function (e) {
+    if (e.target === this) DOM.asSrModal.style.display = 'none'
+  })
+  DOM.btnConfirmASSR.addEventListener('click', confirmASSR)
+  // Assistant — region picker modal
+  DOM.asRegion.addEventListener('click', openAssistantRegion)
+  DOM.regionModal.addEventListener('click', function (e) {
+    if (e.target === this) DOM.regionModal.style.display = 'none'
+  })
+  DOM.btnConfirmRegion.addEventListener('click', confirmRegionPicker)
+  // Assistant — start recommendation
+  DOM.btnAssistant.addEventListener('click', startAssistant)
+  // Assistant — exit
+  DOM.btnExitAssistant.addEventListener('click', exitAssistant)
+  // Assistant — Enter key triggers search
+  DOM.asKeyword.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') startAssistant()
+  })
+  DOM.asScore.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') startAssistant()
+  })
+  DOM.asRank.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') startAssistant()
+  })
+
+  // Resize handler for assistant layout
+  window.addEventListener('resize', function () {
+    if (DOM.assistantResults.style.display !== 'none') {
+      updateAssistantLayout()
+    }
   })
 }
 
