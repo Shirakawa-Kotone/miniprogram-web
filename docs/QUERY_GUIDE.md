@@ -40,21 +40,22 @@ node ~/.claude/skills/zhiyuan-helper/query.js --score 620 --sr 物化生 --provi
 node docs/build-data.js
 ```
 
-## sklearn 使用方式
+## 数据格式
 
-`query.js` 的输出格式是 JSON，任何语言都可以解析利用：
+`query.js` 的输出是 JSON，按「院校 → 专业组」组织，`records[].code` 为**院校代号**，`records[].groups[].code` 为**专业组代号**：
 
 ```json
 {
   "total": 136,
   "records": [{
     "school": "华南理工大学",
-    "code": "1662",
+    "code": "1662",         // 院校代号
     "province": "广东",
     "nature": "非定向",
     "groups": [{
-      "name": "计算机类",
-      "code": "0809",
+      "name": "计算机类",     // 专业组名称
+      "code": "0809",        // 专业组代号
+      "majorCode": "AB",     // 专业代号（部分有）
       "sr": "04*05",
       "srDisplay": "物理 化学",
       "batch": "本科",
@@ -62,7 +63,8 @@ node docs/build-data.js
       "remark": "",
       "history": {
         "2024": { "score": 637, "rank": 2164, "count": 5 },
-        "2025": { "score": 628, "rank": 2518, "count": 6 }
+        "2025": { "score": 628, "rank": 2518, "count": 6 },
+        "2026": null          // 无数据时为 null
       }
     }]
   }]
