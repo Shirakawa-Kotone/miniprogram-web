@@ -156,6 +156,7 @@ function expandAllData(callback) {
           feePool[r[12]] || '',
           remarkPool[r[13]] || '',
           srCode ? srCode.split('*').map(s => SR_MAP[s] || s).join(' ') : '不限',
+          r[14] !== undefined ? gcPool[r[14]] || '' : '',
         ]
       }
       pos = chunkEnd
@@ -225,7 +226,7 @@ function buildMergedCache() {
     } else if (yr === '2025') {
       if (!grp.b) grp.b = { s: r[6], r: r[7], e: r[8] }
     } else {
-      if (!grp.d) grp.d = { s: r[6], r: r[7], e: r[8] }
+      if (!grp.d) grp.d = { s: r[6], r: r[7], e: r[8], code: r[15] }
       grp.c = r[2]; grp.gc = r[11]; grp.batch = r[9]
       grp.plan = r[10]; grp.fee = r[12]
     }
@@ -270,7 +271,7 @@ function computeDiffs(g, vr) {
   if (yrs.length < 2) return null
   const diffs = []
   const fields = [
-    { key: 'gc', label: '专业组' },
+    { key: 'gc', label: '专业组代码' },
     { key: 'batch', label: '批次' },
     { key: 'plan', label: '性质' },
     { key: 'fee', label: '收费标准' },
@@ -536,7 +537,7 @@ function renderCardGrouped(item, idx) {
   // Group name
   if (item.g) body.appendChild(makeRow('专业名称', item.g, 'full'))
   // Group code
-  if (item.gc) body.appendChild(makeRow('专业组', item.gc))
+  if (item.gc) body.appendChild(makeRow('专业组代码', item.gc))
 
   // 2024 row
   if (item.a) {
@@ -555,7 +556,7 @@ function renderCardGrouped(item, idx) {
   // 2026 row
   if (item.d) {
     body.appendChild(make2026Row(
-      '<span class="card-value">专业代号 ' + escHtml(item.gc) + '</span>' +
+      '<span class="card-value">专业代号 ' + escHtml(item.d.code) + '</span>' +
       '<span class="card-value">计划录取' + item.d.e + '人</span>'))
   }
 
@@ -598,7 +599,9 @@ function renderCardSingle(record, idx) {
   body.appendChild(makeRow('选科', record[14], 'tag'))
   if (record[10]) body.appendChild(makeRow('性质', record[10]))
   if (record[5]) body.appendChild(makeRow('专业名称', record[5], 'full'))
-  if (record[11]) body.appendChild(makeRow('专业组', record[11]))
+  if (record[11]) body.appendChild(makeRow('专业组代码', record[11]))
+  // 2026年记录显示专业代号
+  if (record[0] === '2026' && record[15]) body.appendChild(makeRow('专业代号', record[15]))
 
   if (record[0] !== '2026') {
     body.appendChild(makeRow('最低分', String(record[6]), 'highlight'))
@@ -674,7 +677,7 @@ function renderDiffs(diffs) {
   for (const diff of diffs) {
     const group = document.createElement('div')
     group.className = 'diff-group'
-    const label = diff.field === '专业组' ? '专业组变动' : diff.field + '差异'
+    const label = diff.field === '专业组代码' ? '专业组代码变动' : diff.field + '差异'
     group.innerHTML = '<span class="diff-field">' + label + '</span>'
     for (const entry of diff.entries) {
       const e = document.createElement('div')
@@ -1008,7 +1011,7 @@ const TUTORIAL = {
       { title: '选科要求', desc: '该专业对高考选考科目的要求，只有选科符合的考生才能报考。「不限选科」即所有考生均可报考。本示范要求「物理+化学」。' },
       { title: '性质', desc: '招生计划的性质。「非定向」为普通招生；「定向」面向特定地区/单位就业。' },
       { title: '专业名称', desc: '该专业组包含的具体招生专业。每个专业组可能包含一个或多个相关专业。' },
-      { title: '专业组', desc: '院校将招生专业按选科要求等条件划分为不同专业组。同一院校不同专业组的录取分数可能差异很大。' },
+      { title: '专业组代码', desc: '院校将招生专业按选科要求等条件划分为不同专业组。同一院校不同专业组的录取分数可能差异很大。' },
       { title: '2024年录取数据', desc: '2024年该专业录取的最低高考分数（600分）、最低全省排名（10000名）和实际录取人数（35人）。分数和排名越高录取难度越大，建议优先参考排名。' },
       { title: '2025年录取数据', desc: '2025年录取数据（580分，15000名，38人）。可与2024年对比观察分数和排名的涨跌趋势。' },
       { title: '2026年计划数据', desc: '2026年该专业的计划招生名额（40人）。实际录取人数可能会有微调。2026年为志愿填报参考数据，非最终录取结果。' },
@@ -1027,7 +1030,7 @@ const TUTORIAL = {
       _newLabel: true,
       _diffs: [
         {
-          field: '专业组',
+          field: '专业组代码',
           entries: [
             { years: '2024年、2025年', value: 'G01' },
             { years: '2026年', value: 'A01' },
@@ -1051,7 +1054,7 @@ const TUTORIAL = {
       { title: '选科要求', desc: '该专业对高考选考科目的要求。本示范中为「物理」，即选考物理的考生方可报考。' },
       { title: '性质', desc: '招生计划的性质。非定向为普通招生，定向面向特定地区就业。' },
       { title: '专业名称', desc: '该专业组包含的专业名称。本示范为南昌大学「经济学」专业。' },
-      { title: '专业组', desc: '该专业的组代码，用于标识不同的专业组。' },
+      { title: '专业组代码', desc: '该专业的组代码，用于标识不同的专业组。' },
       { title: '最低分', desc: '该专业录取的最低高考分数（574分），是评估录取难度最直接的指标。' },
       { title: '最低排名', desc: '该专业录取的最低全省排名（19639名）。相比分数，排名能更准确地反映录取难度。' },
       { title: '录取人数', desc: '该专业实际录取的学生人数（17人），反映招生规模。' },
@@ -1074,7 +1077,7 @@ const TUTORIAL = {
       { title: '选科要求', desc: '该专业对高考选考科目的要求。本示范为「物理+生物」，需同时选考这两科方可报考。' },
       { title: '性质', desc: '招生计划的性质。2026年计划数据中的性质分类与往年一致。' },
       { title: '专业名称', desc: '该专业组包含的专业名称。本示范为南昌大学「法学」专业。' },
-      { title: '专业组', desc: '该专业的组代码。2026年法学专业组代码为502。' },
+      { title: '专业组代码', desc: '该专业的组代码。2026年法学专业组代码为502。' },
       { title: '计划录取', desc: '2026年该专业的计划招生名额（7人）。实际录取人数可能会有微调。' },
       { title: '收费标准', desc: '每学年的学费标准（4950元/年）。不同专业学费可能不同。' },
       { title: '备注', desc: '该专业的特殊说明，可点击展开查看完整内容。' },
@@ -1243,7 +1246,7 @@ function renderTutorialMerged(d, stepIdx) {
       '<div class="card-row' + (stepIdx === 4 ? ' row-current' : '') + '" id="hl-4"><span class="card-label">选科</span><span class="card-value tag">' + escHtml(d._sd) + '</span></div>' +
       '<div class="card-row' + (stepIdx === 5 ? ' row-current' : '') + '" id="hl-5"><span class="card-label">性质</span><span class="card-value">' + escHtml(d.plan) + '</span></div>' +
       '<div class="card-row' + (stepIdx === 6 ? ' row-current' : '') + '" id="hl-6"><span class="card-label">专业名称</span><span class="card-value full">' + escHtml(d.g) + '</span></div>' +
-      '<div class="card-row' + (stepIdx === 7 ? ' row-current' : '') + '" id="hl-7"><span class="card-label">专业组</span><span class="card-value">' + escHtml(d.gc) + '</span></div>' +
+      '<div class="card-row' + (stepIdx === 7 ? ' row-current' : '') + '" id="hl-7"><span class="card-label">专业组代码</span><span class="card-value">' + escHtml(d.gc) + '</span></div>' +
       (d.a ? '<div class="card-row row-highlight' + (stepIdx === 8 ? ' row-current' : '') + '" id="hl-8"><span class="gp-label">2024</span><span class="card-value highlight">' + d.a.s + '分</span><span class="card-value highlight">最低排名 ' + d.a.r + '</span><span class="card-value">录取' + d.a.e + '人</span></div>' : '') +
       (d.b ? '<div class="card-row row-highlight' + (stepIdx === 9 ? ' row-current' : '') + '" id="hl-9"><span class="gp-label">2025</span><span class="card-value highlight">' + d.b.s + '分</span><span class="card-value highlight">最低排名 ' + d.b.r + '</span><span class="card-value">录取' + d.b.e + '人</span></div>' : '') +
       (d.d ? '<div class="card-row gp-year' + (stepIdx === 10 ? ' row-current' : '') + '" id="hl-10"><span class="gp-label">2026</span><span class="card-value">计划录取' + d.d.e + '人</span></div>' : '') +
@@ -1266,7 +1269,7 @@ function renderTutorialSingle2025(d, stepIdx) {
       '<div class="card-row' + (stepIdx === 3 ? ' row-current' : '') + '" id="hl-3"><span class="card-label">选科</span><span class="card-value tag">' + escHtml(d.sr) + '</span></div>' +
       '<div class="card-row' + (stepIdx === 4 ? ' row-current' : '') + '" id="hl-4"><span class="card-label">性质</span><span class="card-value">' + escHtml(d.plan) + '</span></div>' +
       '<div class="card-row' + (stepIdx === 5 ? ' row-current' : '') + '" id="hl-5"><span class="card-label">专业名称</span><span class="card-value full">' + escHtml(d.g) + '</span></div>' +
-      '<div class="card-row' + (stepIdx === 6 ? ' row-current' : '') + '" id="hl-6"><span class="card-label">专业组</span><span class="card-value">' + escHtml(d.gc) + '</span></div>' +
+      '<div class="card-row' + (stepIdx === 6 ? ' row-current' : '') + '" id="hl-6"><span class="card-label">专业组代码</span><span class="card-value">' + escHtml(d.gc) + '</span></div>' +
       '<div class="card-row row-highlight' + ((stepIdx === 7 || stepIdx === 8) ? ' row-current' : '') + '" id="hl-7"><span class="card-label">最低分</span><span class="card-value highlight">' + d.score + '</span><span class="card-label">最低排名</span><span class="card-value highlight">' + d.rank + '</span></div>' +
       '<div class="card-row' + (stepIdx === 9 ? ' row-current' : '') + '" id="hl-9"><span class="card-label">录取</span><span class="card-value">' + d.enrolled + '人</span></div>' +
       '<div class="card-row' + (stepIdx === 10 ? ' row-current' : '') + '" id="hl-10"><span class="card-label">收费标准</span><span class="card-value">' + d.fee + '元/年</span></div>' +
@@ -1288,7 +1291,7 @@ function renderTutorialSingle2026(d, stepIdx) {
       '<div class="card-row' + (stepIdx === 3 ? ' row-current' : '') + '" id="hl-3"><span class="card-label">选科</span><span class="card-value tag">' + escHtml(d.sr) + '</span></div>' +
       '<div class="card-row' + (stepIdx === 4 ? ' row-current' : '') + '" id="hl-4"><span class="card-label">性质</span><span class="card-value">' + escHtml(d.plan) + '</span></div>' +
       '<div class="card-row' + (stepIdx === 5 ? ' row-current' : '') + '" id="hl-5"><span class="card-label">专业名称</span><span class="card-value full">' + escHtml(d.g) + '</span></div>' +
-      '<div class="card-row' + (stepIdx === 6 ? ' row-current' : '') + '" id="hl-6"><span class="card-label">专业组</span><span class="card-value">' + escHtml(d.gc) + '</span></div>' +
+      '<div class="card-row' + (stepIdx === 6 ? ' row-current' : '') + '" id="hl-6"><span class="card-label">专业组代码</span><span class="card-value">' + escHtml(d.gc) + '</span></div>' +
       '<div class="card-row' + (stepIdx === 7 ? ' row-current' : '') + '" id="hl-7"><span class="card-label">计划录取</span><span class="card-value highlight">' + d.planCount + '人</span></div>' +
       '<div class="card-row' + (stepIdx === 8 ? ' row-current' : '') + '" id="hl-8"><span class="card-label">收费标准</span><span class="card-value">' + d.fee + '元/年</span></div>' +
       (d.remark ? '<div class="card-row card-remark-header ' + (stepIdx === 9 ? ' row-current' : '') + '" id="hl-9" onclick="toggleDemoRemark()"><span class="card-label">备注</span><span class="card-remark-toggle">' + (state.tutorialRemarkExpanded ? '收起▲' : '展开▼') + '</span></div>' : '') +
@@ -1299,7 +1302,7 @@ function renderTutorialSingle2026(d, stepIdx) {
 function renderTutorialDiffs(diffs) {
   let html = ''
   for (const diff of diffs) {
-    const label = diff.field === '专业组' ? '专业组变动' : diff.field + '差异'
+    const label = diff.field === '专业组代码' ? '专业组代码变动' : diff.field + '差异'
     html += '<div class="diff-group"><span class="diff-field">' + label + '</span>'
     for (const entry of diff.entries) {
       html += '<div class="diff-entry"><span class="diff-years">' + escHtml(entry.years) + '</span><span class="diff-arrow">→</span><span class="diff-val">' + escHtml(entry.value) + '</span></div>'
