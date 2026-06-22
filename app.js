@@ -555,6 +555,7 @@ function renderCardGrouped(item, idx) {
   // 2026 row
   if (item.d) {
     body.appendChild(make2026Row(
+      '<span class="card-value">专业代号 ' + escHtml(item.gc) + '</span>' +
       '<span class="card-value">计划录取' + item.d.e + '人</span>'))
   }
 

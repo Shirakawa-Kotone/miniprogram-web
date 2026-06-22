@@ -9,6 +9,7 @@ Thumbs.db
 *.swo
 *~
 docs/
+CLAUDE.md
 
 # Editor settings
 .project
