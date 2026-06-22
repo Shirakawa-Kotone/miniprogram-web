@@ -584,6 +584,23 @@ input[type="number"] {
   font-size: 14px;
 }
 
+.card-link-row {
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px dashed var(--border);
+}
+
+.card-link {
+  color: var(--primary);
+  font-size: 13px;
+  text-decoration: none;
+  word-break: break-all;
+}
+
+.card-link:hover {
+  text-decoration: underline;
+}
+
 .card-value.badge {
   background: #CCEBFF;
   color: #66CCFF;

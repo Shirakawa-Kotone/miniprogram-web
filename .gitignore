@@ -14,3 +14,7 @@ CLAUDE.md
 .project
 .classpath
 .settings/
+
+# Data processing scripts & raw data
+*.xlsx
+scripts/

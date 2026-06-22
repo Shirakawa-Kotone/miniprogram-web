@@ -98,7 +98,7 @@ function expandAllData(callback) {
 
   const raw = window.ALL_DATA_RAW
   const { a: provincePool, b: schoolNamePool, c: groupNamePool, d: records, e: extra } = raw
-  const { b: batchPool, p: planPool, g: gcPool, f: feePool, r: remarkPool } = extra
+  const { b: batchPool, p: planPool, g: gcPool, f: feePool, r: remarkPool, sl: schoolLinkPool } = extra
   const out = new Array(records.length)
   const yearMap = ['2024', '2025', '2026']
   const TOTAL = records.length
@@ -157,6 +157,7 @@ function expandAllData(callback) {
           remarkPool[r[13]] || '',
           srCode ? srCode.split('*').map(s => SR_MAP[s] || s).join(' ') : '不限',
           r[14] !== undefined ? gcPool[r[14]] || '' : '',
+          schoolLinkPool ? schoolLinkPool[r[3]] || '' : '',
         ]
       }
       pos = chunkEnd
@@ -226,7 +227,7 @@ function buildMergedCache() {
     } else if (yr === '2025') {
       if (!grp.b) grp.b = { s: r[6], r: r[7], e: r[8] }
     } else {
-      if (!grp.d) grp.d = { s: r[6], r: r[7], e: r[8], code: r[15] }
+      if (!grp.d) grp.d = { s: r[6], r: r[7], e: r[8], code: r[15], link: r[16] || '' }
       grp.c = r[2]; grp.gc = r[11]; grp.batch = r[9]
       grp.plan = r[10]; grp.fee = r[12]
     }
@@ -558,6 +559,10 @@ function renderCardGrouped(item, idx) {
     body.appendChild(make2026Row(
       '<span class="card-value">专业代号 ' + escHtml(item.d.code) + '</span>' +
       '<span class="card-value">计划录取' + item.d.e + '人</span>'))
+    // 招生简章链接
+    if (item.d.link) {
+      body.appendChild(makeLinkRow(item.d.link))
+    }
   }
 
   // Remark
@@ -609,6 +614,10 @@ function renderCardSingle(record, idx) {
     body.appendChild(makeRow('录取', record[8] + '人'))
   } else {
     body.appendChild(makeRow('计划录取', record[8] + '人', 'highlight'))
+    // 招生简章链接
+    if (record[16]) {
+      body.appendChild(makeLinkRow(record[16]))
+    }
   }
   if (record[12]) body.appendChild(makeRow('收费标准', record[12] + '元/年'))
 
@@ -645,6 +654,15 @@ function make2026Row(html) {
   const row = document.createElement('div')
   row.className = 'card-row gp-year'
   row.innerHTML = '<span class="gp-label">2026</span>' + html
+  return row
+}
+
+// Helper: link row (招生简章)
+function makeLinkRow(url) {
+  const row = document.createElement('div')
+  row.className = 'card-row card-link-row'
+  row.innerHTML = '<span class="card-label">招生简章</span>' +
+    '<a class="card-link" href="' + escHtml(url) + '" target="_blank" rel="noopener noreferrer">查看招生章程 ↗</a>'
   return row
 }
 
