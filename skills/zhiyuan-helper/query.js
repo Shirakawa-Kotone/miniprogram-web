@@ -165,7 +165,7 @@ function parseArgs() {
   --year <str>       年份 2024|2025|2026
   --limit <n>        上限 (默认 200)
   --all-years      输出所有年份数据（默认只输出 2026 年有招生的专业）
-  --format <fmt>     输出格式: json 或 markdown (默认)
+  --format <fmt>     输出格式: json (默认) 或 markdown
 
 排名估算:
   --estimate-rank --score <n> --year <str> [--sr <str>]
@@ -177,7 +177,7 @@ function parseArgs() {
     process.exit(0)
   }
 
-  const params = { score: null, rank: null, sr: null, province: [], batch: [], keyword: [], year: null, limit: DEFAULT_LIMIT, estimateRank: false, format: 'markdown' }
+  const params = { score: null, rank: null, sr: null, province: [], batch: [], keyword: [], year: null, limit: DEFAULT_LIMIT, estimateRank: false, format: 'json' }
 
   for (let i = 0; i < args.length; i++) {
     const next = () => { const v = args[++i]; if (v === undefined) die(`缺少参数值: ${args[i-1]}`); return v }
@@ -348,14 +348,21 @@ function main() {
     }
   }
 
-  if (params.format === 'markdown') {
-    if (params.score || params.rank) {
-      const buckets = classify(matched, params.score, params.rank)
-      process.stdout.write(formatClassified(buckets, params.score, params.rank) + '\n')
-    } else {
-      process.stdout.write(formatMarkdown(matched) + '\n')
+  // JSON 输出：如有分数/排名，给每个专业组标注 tier
+  if (params.score || params.rank) {
+    const buckets = classify(matched, params.score, params.rank)
+    // 清空 matched 里的 groups，按分档顺序重建（含 tier 标记）
+    const tierLabel = { chong: '冲', wen: '稳', bao: '保' }
+    for (const school of matched) school.groups = []
+    for (const t of ['chong', 'wen', 'bao']) {
+      for (const { school, group } of buckets[t]) {
+        school.groups.push({ ...group, tier: tierLabel[t] })
+      }
     }
-    return
+    // 去掉没有专业组的院校
+    for (let i = matched.length - 1; i >= 0; i--) {
+      if (!matched[i].groups.length) matched.splice(i, 1)
+    }
   }
 
   const output = {
