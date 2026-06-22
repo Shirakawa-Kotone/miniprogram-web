@@ -94,7 +94,7 @@ options:
 
 ### 第二步：查询数据
 
-组装参数运行 `query.js`。**始终加上 `--format markdown`，得到的就是排版好的表格，直接使用。禁止自己重新排版。** 如果用户有专业方向，直接按下方「语义扩展表」一次扩展成多个 `--keyword`，只调用一次 query.js。禁止先查原词再扩展。
+组装参数运行 `query.js`（默认输出排版好的表格行，**直接使用，禁止自己重新排版**）。如果用户有专业方向，直接按下方「语义扩展表」一次扩展成多个 `--keyword`，只调用一次 query.js。禁止先查原词再扩展。
 
 ```bash
 node ~/.claude/skills/zhiyuan-helper/query.js [选项]
@@ -103,23 +103,23 @@ node ~/.claude/skills/zhiyuan-helper/query.js [选项]
 常用查询组合（`--sr` 统一用核心组合名，见上方选科映射表）：
 
 ```bash
-# 分数+选科+省份+专业（始终加 --format markdown）
-node ~/.claude/skills/zhiyuan-helper/query.js --score 620 --sr 物化生 --province 广东 --keyword 计算机 --format markdown
+# 分数+选科+省份+专业（默认输出表格）
+node ~/.claude/skills/zhiyuan-helper/query.js --score 620 --sr 物化生 --province 广东 --keyword 计算机
 
 # 多关键词：--keyword 可重复使用，OR 逻辑
-node ~/.claude/skills/zhiyuan-helper/query.js --score 620 --sr 物化生 --keyword 计算机 --keyword 软件 --keyword 人工智能 --format markdown
+node ~/.claude/skills/zhiyuan-helper/query.js --score 620 --sr 物化生 --keyword 计算机 --keyword 软件 --keyword 人工智能
 
 # 多省份：--province 可重复
-node ~/.claude/skills/zhiyuan-helper/query.js --score 620 --sr 物化生 --province 广东 --province 浙江 --format markdown
+node ~/.claude/skills/zhiyuan-helper/query.js --score 620 --sr 物化生 --province 广东 --province 浙江
 
 # 物化政/物化地 → 统一用物化生
-node ~/.claude/skills/zhiyuan-helper/query.js --score 620 --sr 物化生 --province 浙江 --keyword 计算机 --format markdown
+node ~/.claude/skills/zhiyuan-helper/query.js --score 620 --sr 物化生 --province 浙江 --keyword 计算机
 
 # 只有排名
-node ~/.claude/skills/zhiyuan-helper/query.js --rank 8000 --province 北京 --format markdown
+node ~/.claude/skills/zhiyuan-helper/query.js --rank 8000 --province 北京
 
 # 只有分数
-node ~/.claude/skills/zhiyuan-helper/query.js --score 620 --sr 物化生 --format markdown
+node ~/.claude/skills/zhiyuan-helper/query.js --score 620 --sr 物化生
 
 # 先估算排名（如果用户只有分数）
 node ~/.claude/skills/zhiyuan-helper/query.js --estimate-rank --score 620 --year 2025 --sr 物化生
@@ -206,8 +206,8 @@ node ~/.claude/skills/zhiyuan-helper/query.js --estimate-rank --score 620 --year
 不要先查原词再扩展。**直接按下方表格**把用户意向扩展成多个 `--keyword`，**一次查询完成**。`--keyword` 间是 OR 逻辑（匹配任一即返回），无需查多次再手动去重。
 
 ```bash
-# 一次查询多个相关专业，OR 匹配，直接输出表格
-node ~/.claude/skills/zhiyuan-helper/query.js --score 620 --sr 物化生 --keyword 计算机 --keyword 软件 --keyword 智能 --keyword 信息 --format markdown
+# 一次查询多个相关专业，OR 匹配（默认输出表格）
+node ~/.claude/skills/zhiyuan-helper/query.js --score 620 --sr 物化生 --keyword 计算机 --keyword 软件 --keyword 智能 --keyword 信息
 ```
 
 > **如果用户说了多个专业方向**（如"想学计算机或金融"），按每个方向扩展后合并去重，一次查完。
@@ -255,30 +255,43 @@ node ~/.claude/skills/zhiyuan-helper/query.js --score 620 --sr 物化生 --keywo
 保档: 从大到小（最好的保底优先）
 ```
 
-### 第五步：输出（不用自己排版）
+### 第五步：输出（严格按此格式）
 
-`query.js` 加上 `--format markdown` 后直接输出排版好的表格行。**你只需把脚本输出的行分到「冲」「稳」「保」三档标题下，不需要自己写表格。**
+`query.js` 默认输出表格行，**直接复制到对应档位下，禁止修改单元格内容。**
 
-```
+#### 完整输出示范
+
+```markdown
 ## 📊 冲稳保推荐
 
 > 考生信息：620分 | 排名约8000 | 物化生 | 意向：广东 计算机
 
-### 🔥 冲（拼搏）— N 个专业组
-（把匹配冲档的行贴在这里，直接复制脚本输出的行）
+### 🔥 冲（拼搏）— 3 个专业组
+| 院校 | 院校代号 | 专业组 | 包含专业 | 专业组代号 | 选科 | 批次 | 2024分/排名 | 2025分/排名 | 备注 |
+|------|---------|--------|---------|-----------|------|------|-------------|-------------|------|
+| 华南理工大学 | 1662 | 计算机类 | 计算机、软件、信息 | 0809 | 物化 | 本科 | 637/2164 | 628/2518 | |
+| 北京邮电大学 | 1006 | 通信工程 | | 501 | 物化 | 本科 | 625/4095 | 630/2297 | |
 
-### ✅ 稳（稳妥）— N 个专业组
-（把匹配稳档的行贴在这里）
+### ✅ 稳（稳妥）— 5 个专业组
+| 院校 | 院校代号 | 专业组 | 包含专业 | 专业组代号 | 选科 | 批次 | 2024分/排名 | 2025分/排名 | 备注 |
+|------|---------|--------|---------|-----------|------|------|-------------|-------------|------|
+| 南昌大学 | 1041 | 临床医学 | | 501 | 物化 | 本科 | 598/12000 | 605/9800 | |
 
-### 🛡️ 保（保底）— N 个专业组
-（把匹配保底的行贴在这里）
+### 🛡️ 保（保底）— 4 个专业组
+| 院校 | 院校代号 | 专业组 | 包含专业 | 专业组代号 | 选科 | 批次 | 2024分/排名 | 2025分/排名 | 备注 |
+|------|---------|--------|---------|-----------|------|------|-------------|-------------|------|
+| 华东交通大学 | 1005 | 土木工程 | | 601 | 物化 | 本科 | 572/21000 | 568/23000 | |
 ```
 
-**规则：**
-- 不修改脚本输出的任何单元格内容
-- 2024/2025 两列已由脚本保证同时存在
-- 不展示 2026 年信息
-- 分的档次不对的条目换档即可，不要重写表格
+#### 必须遵守的规则
+
+1. **分三档输出**：冲（拼搏）、稳（稳妥）、保（保底），顺序固定
+2. **表格列必须完整**：`院校 | 院校代号 | 专业组 | 包含专业 | 专业组代号 | 选科 | 批次 | 2024分/排名 | 2025分/排名 | 备注`
+3. **每档都要有表头行**（列名行 + 分隔行），不能省略
+4. 脚本输出的行直接复制，**不改任何单元格内容**
+5. 不展示 2026 年数据
+6. 每档结尾要标明总数，如 `— 3 个专业组`
+7. 如果某档无数据，写 `暂无`
 
 如果信息不全（比如没有选科），在结果开头用引用块说明"本次查询未指定 XX，结果包含所有可能选项，仅供参考"。
 
@@ -327,7 +340,7 @@ node ~/.claude/skills/zhiyuan-helper/query.js --score 620 --sr 物化生 --keywo
 
 ## 注意事项
 
-- 2024/2025 为实际录取数据。2026 数据仅用于查询，**输出时不展示 2026 年信息**
+- 默认只输出 **2026 年有招生计划**的专业组。2024/2025 为实际录取数据，**输出时不展示 2026 年信息**
 - **调剂提示**：表格「包含专业」列列出了该专业组下的所有专业。如果用户表示接受调剂，告知用户同专业组的其他专业作为参考
 - `query.js` 加载 9.6MB 数据需 1-3 秒，耐心等待
 - 无法确定排名时：优先用分数模式分档，也可提示用户查找一分一段表

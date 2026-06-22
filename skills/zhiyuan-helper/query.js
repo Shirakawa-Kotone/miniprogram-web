@@ -101,6 +101,7 @@ function filterSchools(schools, params) {
       if (sr && !srMatch(sr, g.sr)) continue
       if (keyword.length && !keyword.some(k => g.name.indexOf(k) !== -1)) continue
       if (year && !g.history[year]) continue
+      if (!g.history?.['2026']) continue
       if (!passesScoreRank(g, score, rank)) continue
 
       matchedGroups.push(g)
@@ -163,7 +164,8 @@ function parseArgs() {
   --keyword <str>    专业组关键词 (可重复, 多关键词 OR 匹配)
   --year <str>       年份 2024|2025|2026
   --limit <n>        上限 (默认 200)
-  --format <fmt>     输出格式: json (默认) 或 markdown
+  --all-years      输出所有年份数据（默认只输出 2026 年有招生的专业）
+  --format <fmt>     输出格式: json 或 markdown (默认)
 
 排名估算:
   --estimate-rank --score <n> --year <str> [--sr <str>]
@@ -175,7 +177,7 @@ function parseArgs() {
     process.exit(0)
   }
 
-  const params = { score: null, rank: null, sr: null, province: [], batch: [], keyword: [], year: null, limit: DEFAULT_LIMIT, estimateRank: false, format: 'json' }
+  const params = { score: null, rank: null, sr: null, province: [], batch: [], keyword: [], year: null, limit: DEFAULT_LIMIT, estimateRank: false, format: 'markdown' }
 
   for (let i = 0; i < args.length; i++) {
     const next = () => { const v = args[++i]; if (v === undefined) die(`缺少参数值: ${args[i-1]}`); return v }
@@ -213,8 +215,8 @@ function splitName(name) {
 }
 
 function formatMarkdown(matched) {
-  const lines = ['| 院校 | 专业组 | 包含专业 | 专业组代号 | 选科 | 批次 | 2024分/排名 | 2025分/排名 | 备注 |',
-                 '|------|--------|---------|-----------|------|------|-------------|-------------|------|']
+  const lines = ['| 院校 | 院校代号 | 专业组 | 包含专业 | 专业组代号 | 选科 | 批次 | 2024分/排名 | 2025分/排名 | 备注 |',
+                 '|------|---------|--------|---------|-----------|------|------|-------------|-------------|------|']
   for (const school of matched) {
     for (const g of school.groups) {
       const { base, majors } = splitName(g.name)
@@ -223,7 +225,7 @@ function formatMarkdown(matched) {
       const h25 = g.history?.['2025']
       const s24 = h24 ? (h24.score ?? '') + '/' + (h24.rank ?? '') : '-'
       const s25 = h25 ? (h25.score ?? '') + '/' + (h25.rank ?? '') : '-'
-      lines.push(`| ${cell(school.school)} | ${cell(base)} | ${cell(majors)} | ${cell(g.code)} | ${cell(srShow)} | ${cell(g.batch)} | ${cell(s24)} | ${cell(s25)} | ${cell(g.remark)} |`)
+      lines.push(`| ${cell(school.school)} | ${cell(school.code)} | ${cell(base)} | ${cell(majors)} | ${cell(g.code)} | ${cell(srShow)} | ${cell(g.batch)} | ${cell(s24)} | ${cell(s25)} | ${cell(g.remark)} |`)
     }
   }
   return lines.join('\n')
