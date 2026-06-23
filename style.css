@@ -695,6 +695,40 @@ input[type="number"] {
   line-height: 1.4;
 }
 
+.as-row-algo-adjust {
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+}
+
+.as-algo-picker-section {
+  flex: 1;
+  min-width: 0;
+}
+
+.algo-toggle {
+  flex: none;
+  margin-top: 14px;
+  align-self: flex-start;
+}
+
+.algo-desc {
+  display: block;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 4px;
+  line-height: 1.5;
+}
+
+.scroll-select-item strong {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.scroll-select-item.selected .algo-desc {
+  color: var(--text-secondary);
+}
+
 .as-action {
   margin-top: 8px;
 }
@@ -1522,6 +1556,14 @@ input[type="number"] {
 
 :root.dark-mode .placeholder-text {
   color: #555;
+}
+
+:root.dark-mode .algo-desc {
+  color: #888;
+}
+
+:root.dark-mode .scroll-select-item.selected .algo-desc {
+  color: #aaa;
 }
 
 :root.dark-mode .toggle-box {

@@ -50,6 +50,13 @@ const REGION_NAMES = Object.keys(REGIONS)
 const AS_SR_LIST = ['物化生', '物化政', '物化地', '物政生', '物政地', '物生地']
 const AS_SR_CODES = ['04*05*06', '04*05', '04*05', '04*06', '04', '04*06']
 
+const ALGO_LIST = [
+  { value: 'default', label: '默认（可推荐新专业）', desc: '优先使用2026年预估排名划定冲稳保，若无2026预估排名数据则参考2024-2025年平均排名。此模式下2026年新增的院校专业组也能获得推荐，适合希望全面了解所有可选机会的考生。' },
+  { value: 'min', label: '按最低（最保守）', desc: '仅使用2024-2025年的最低排名（即该专业组录取名次最好的年份）作为参考依据，不使用2026预估排名，不会推荐无历史数据的新增专业。此模式给出的冲稳保判断最为保守，适合风险承受能力较低的考生。' },
+  { value: 'avg', label: '按平均', desc: '仅使用2024-2025年的平均排名作为参考依据，不使用2026预估排名，不会推荐无历史数据的新增专业。此模式用历史平均水平来衡量冲稳保，适合参考往年录取趋势做判断的考生。' },
+  { value: 'max', label: '按最高（最激进）', desc: '仅使用2024-2025年的最高排名（即该专业组录取名次最差的年份）作为参考依据，不使用2026预估排名，不会推荐无历史数据的新增专业。此模式给出的冲稳保判断最为激进，适合敢于冲刺且对某专业有强烈意愿的考生。' },
+]
+
 // ============================================================
 // 应用状态
 // ============================================================
@@ -109,6 +116,7 @@ const state = {
   // Assistant: 服从调剂
   assistantAdjust: false,
   assistantAdjustExpanded: {},
+  assistantAlgoIdx: 0,           // index into ALGO_LIST
 }
 
 // DOM references (set once on init)
@@ -900,6 +908,42 @@ function onToggleAdjust() {
   }
 }
 
+function openAlgoPicker() {
+  renderAlgoList()
+  DOM.algoModal.style.display = 'flex'
+}
+
+function closeAlgoPicker() {
+  DOM.algoModal.style.display = 'none'
+}
+
+function confirmAlgoPicker() {
+  DOM.algoModal.style.display = 'none'
+  const idx = state.assistantAlgoIdx
+  DOM.algoLabel.textContent = ALGO_LIST[idx].label
+  // 刷新推荐结果
+  if (DOM.assistantResults.style.display !== 'none') {
+    startAssistant()
+  }
+}
+
+function renderAlgoList() {
+  const list = DOM.algoList
+  list.innerHTML = ''
+  for (let i = 0; i < ALGO_LIST.length; i++) {
+    const item = document.createElement('div')
+    item.className = 'scroll-select-item' + (state.assistantAlgoIdx === i ? ' selected' : '')
+    item.dataset.idx = i
+    item.innerHTML = '<strong>' + ALGO_LIST[i].label + '</strong>' +
+      '<span class="algo-desc">' + ALGO_LIST[i].desc + '</span>'
+    item.addEventListener('click', function () {
+      state.assistantAlgoIdx = parseInt(this.dataset.idx)
+      renderAlgoList()
+    })
+    list.appendChild(item)
+  }
+}
+
 function onToggleDarkMode() {
   state.darkMode = !state.darkMode
   document.documentElement.classList.toggle('dark-mode', state.darkMode)
@@ -1566,53 +1610,124 @@ function getBestScore(group) {
   return scores.length ? Math.max(...scores) : null
 }
 
-function calculateTier(userScore, userRank, group) {
-  // Priority 1: 2026 estimated rank, with deviation check
-  if (userRank && group.d && group.d.r) {
-    const rankOk = Math.abs(group.d.r - userRank) / userRank <= 0.15
-    let deviationOk
-    if (userScore && group.d.s) {
-      deviationOk = Math.abs(group.d.s - userScore) <= 20 && rankOk
-    } else {
-      deviationOk = rankOk
-    }
-    if (deviationOk) {
-      const ratio = group.d.r / userRank
-      if (ratio < 0.92) return '冲'
-      if (ratio <= 1.08) return '稳'
-      // 保双重熔断：分数 > userScore-15 且 排名 ≤ max(userRank×130%, userRank+3000)
-      const rankCap = Math.max(userRank * 1.30, userRank + 3000)
-      if (group.d.r > rankCap) return null
-      if (userScore) {
-        const bestScore = getBestScore(group)
-        if (bestScore !== null && bestScore < userScore - 15) return null
+function getRefScore(group, algorithm) {
+  if (algorithm === 'default') {
+    // 默认：优先 2026 预估分
+    if (group.d && group.d.s) return Number(group.d.s)
+    const scores = []
+    if (group.a && group.a.s) scores.push(Number(group.a.s))
+    if (group.b && group.b.s) scores.push(Number(group.b.s))
+    return scores.length ? Math.max(...scores) : 0
+  }
+  // min / avg / max: 仅使用 2024-2025 分数
+  const scores = []
+  if (group.a && group.a.s) scores.push(Number(group.a.s))
+  if (group.b && group.b.s) scores.push(Number(group.b.s))
+  if (scores.length === 0) return 0
+  if (algorithm === 'min') return Math.min(...scores)
+  if (algorithm === 'avg') return scores.reduce((a, b) => a + b, 0) / scores.length
+  if (algorithm === 'max') return Math.max(...scores)
+  return 0
+}
+
+function calculateTier(userScore, userRank, group, algorithm) {
+  algorithm = algorithm || 'default'
+
+  // ── 默认模式（可推荐"新"专业）─────────────────────────────
+  if (algorithm === 'default') {
+    // Priority 1: 2026 estimated rank, with deviation check
+    if (userRank && group.d && group.d.r) {
+      const rankOk = Math.abs(group.d.r - userRank) / userRank <= 0.15
+      let deviationOk
+      if (userScore && group.d.s) {
+        deviationOk = Math.abs(group.d.s - userScore) <= 20 && rankOk
+      } else {
+        deviationOk = rankOk
       }
-      return '保'
+      if (deviationOk) {
+        const ratio = group.d.r / userRank
+        if (ratio < 0.92) return '冲'
+        if (ratio <= 1.08) return '稳'
+        // 保双重熔断：分数 > userScore-15 且 排名 ≤ max(userRank×130%, userRank+3000)
+        const rankCap = Math.max(userRank * 1.30, userRank + 3000)
+        if (group.d.r > rankCap) return null
+        if (userScore) {
+          const bestScore = getBestScore(group)
+          if (bestScore !== null && bestScore < userScore - 15) return null
+        }
+        return '保'
+      }
     }
+
+    // Priority 2: 2024/2025 average rank
+    if (userRank) {
+      const ranks = []
+      if (group.a && group.a.r) ranks.push(group.a.r)
+      if (group.b && group.b.r) ranks.push(group.b.r)
+      if (ranks.length > 0) {
+        const avgRank = ranks.reduce((a, b) => a + b, 0) / ranks.length
+        const ratio = avgRank / userRank
+        if (ratio < 0.92) return '冲'
+        if (ratio <= 1.08) return '稳'
+        // 保双重熔断
+        const rankCap = Math.max(userRank * 1.30, userRank + 3000)
+        if (avgRank > rankCap) return null
+        if (userScore) {
+          const bestScore = getBestScore(group)
+          if (bestScore !== null && bestScore < userScore - 15) return null
+        }
+        return '保'
+      }
+    }
+
+    // Priority 3: Score-based fallback
+    if (userScore) {
+      const scores = []
+      if (group.d && group.d.s) scores.push(group.d.s)
+      if (group.a && group.a.s) scores.push(group.a.s)
+      if (group.b && group.b.s) scores.push(group.b.s)
+      if (scores.length > 0) {
+        const bestScore = Math.max(...scores)
+        if (bestScore > userScore + 5) return '冲'
+        if (bestScore >= userScore - 5) return '稳'
+        return '保'
+      }
+    }
+    return null
   }
 
-  // Priority 2: 2024/2025 average rank
-  if (userRank) {
-    const ranks = []
-    if (group.a && group.a.r) ranks.push(group.a.r)
-    if (group.b && group.b.r) ranks.push(group.b.r)
-    if (ranks.length > 0) {
-      const avgRank = ranks.reduce((a, b) => a + b, 0) / ranks.length
-      const ratio = avgRank / userRank
-      if (ratio < 0.92) return '冲'
-      if (ratio <= 1.08) return '稳'
-      // 保双重熔断
-      const rankCap = Math.max(userRank * 1.30, userRank + 3000)
-      if (avgRank > rankCap) return null
-      if (userScore) {
-        const bestScore = getBestScore(group)
-        if (bestScore !== null && bestScore < userScore - 15) return null
-      }
-      return '保'
-    }
+  // ── min / avg / max — 仅使用 2024-2025 数据 ───────────
+  const ranks = []
+  if (group.a && group.a.r) ranks.push(group.a.r)
+  if (group.b && group.b.r) ranks.push(group.b.r)
+
+  let refRank = null
+  if (ranks.length > 0) {
+    if (algorithm === 'min') refRank = Math.min(...ranks)
+    else if (algorithm === 'avg') refRank = ranks.reduce((a, b) => a + b, 0) / ranks.length
+    else if (algorithm === 'max') refRank = Math.max(...ranks)
   }
 
-  // Priority 3: Score-based fallback
+  if (userRank && refRank !== null) {
+    const ratio = refRank / userRank
+    if (ratio < 0.92) return '冲'
+    if (ratio <= 1.08) return '稳'
+    const rankCap = Math.max(userRank * 1.30, userRank + 3000)
+    if (refRank > rankCap) return null
+    if (userScore) {
+      const scores = []
+      if (group.d && group.d.s) scores.push(group.d.s)
+      if (group.a && group.a.s) scores.push(group.a.s)
+      if (group.b && group.b.s) scores.push(group.b.s)
+      if (scores.length > 0) {
+        const bestScore = Math.max(...scores)
+        if (bestScore < userScore - 15) return null
+      }
+    }
+    return '保'
+  }
+
+  // Score-based fallback（所有算法通用）
   if (userScore) {
     const scores = []
     if (group.d && group.d.s) scores.push(group.d.s)
@@ -1698,7 +1813,8 @@ function startAssistant() {
     if (state.hideCoop && (g.g.indexOf('中外合作') !== -1 || (g.remark && g.remark.indexOf('中外合作') !== -1))) continue
 
     // Calculate tier
-    const tier = calculateTier(score, rank, g)
+    const algo = ALGO_LIST[state.assistantAlgoIdx].value
+    const tier = calculateTier(score, rank, g, algo)
     if (tier && results[tier]) {
       results[tier].push(g)
     }
@@ -1707,9 +1823,10 @@ function startAssistant() {
   // Sort within each tier（保：从高到低，冲/稳：从低到高）
   for (const t of ['冲', '稳', '保']) {
     const order = t === '保' ? -1 : 1
+    const algo = ALGO_LIST[state.assistantAlgoIdx].value
     results[t].sort((a, b) => {
-      const sa = Number((b.d || b.b || b.a || {}).s || 0)
-      const sb = Number((a.d || a.b || a.a || {}).s || 0)
+      const sa = getRefScore(b, algo)
+      const sb = getRefScore(a, algo)
       return order * (sb - sa)
     })
   }
@@ -2003,6 +2120,11 @@ function initDOM() {
     asKeyword: document.getElementById('as-keyword'),
     btnAssistant: document.getElementById('btn-assistant'),
     btnExitAssistant: document.getElementById('btn-exit-assistant'),
+    algoPicker: document.getElementById('btn-algo'),
+    algoLabel: document.getElementById('algo-label'),
+    algoModal: document.getElementById('algo-modal'),
+    algoList: document.getElementById('algo-list'),
+    btnConfirmAlgo: document.getElementById('btn-confirm-algo'),
     assistantResults: document.getElementById('assistant-results'),
     asColumns: document.getElementById('as-columns'),
     resultBar: document.getElementById('result-bar'),
@@ -2150,6 +2272,12 @@ function bindEvents() {
   DOM.btnAssistant.addEventListener('click', startAssistant)
   // Assistant — exit
   DOM.btnExitAssistant.addEventListener('click', exitAssistant)
+  // Assistant — algorithm picker
+  DOM.algoPicker.addEventListener('click', openAlgoPicker)
+  DOM.algoModal.addEventListener('click', function (e) {
+    if (e.target === this) closeAlgoPicker()
+  })
+  DOM.btnConfirmAlgo.addEventListener('click', confirmAlgoPicker)
   // Assistant — Enter key triggers search
   DOM.asKeyword.addEventListener('keydown', function (e) {
     if (e.key === 'Enter') startAssistant()

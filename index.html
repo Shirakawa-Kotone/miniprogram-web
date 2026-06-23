@@ -169,10 +169,16 @@
               <input class="input input-sm" placeholder="如 计算机 医学(专业之间用空格分隔)" id="as-keyword" />
             </div>
           </div>
-          <div class="as-row">
-            <div class="as-full toggle-item" id="toggle-adjust" data-toggle="adjust">
+          <div class="as-row as-row-algo-adjust">
+            <div class="as-algo-picker-section">
+              <span class="as-label">推荐算法</span>
+              <div class="picker picker-sm" id="btn-algo">
+                <span id="algo-label">默认（可推荐新专业）</span>
+              </div>
+            </div>
+            <div class="toggle-item algo-toggle" id="toggle-adjust" data-toggle="adjust">
               <div class="toggle-box"><span class="toggle-check">✓</span></div>
-              <span class="toggle-label">服从调剂（显示同专业组其他专业）</span>
+              <span class="toggle-label">服从调剂</span>
             </div>
           </div>
           <div class="as-action">
@@ -283,6 +289,19 @@
         </div>
       </div>
       <div class="modal-body" id="region-list"></div>
+    </div>
+  </div>
+
+  <!-- ============ 推荐算法选择弹窗 ============ -->
+  <div id="algo-modal" class="modal-overlay" style="display:none">
+    <div class="modal modal-sm">
+      <div class="modal-header">
+        <span class="modal-title">推荐算法</span>
+        <div class="modal-actions">
+          <span class="modal-btn confirm" id="btn-confirm-algo">确定</span>
+        </div>
+      </div>
+      <div class="modal-body" id="algo-list"></div>
     </div>
   </div>
 
