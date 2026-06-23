@@ -1744,26 +1744,7 @@ function calculateTier(userScore, userRank, group, algorithm) {
   return null
 }
 
-function subjectMatch(userSr, groupSr) {
-  if (!groupSr) return true
-  const userCodes = new Set(parseSrCodes(userSr))
-  const groupCodes = parseSrCodes(groupSr)
-  if (groupCodes.length === 0) return true
-  return groupCodes.every(c => userCodes.has(c))
-}
 
-function parseSrCodes(sr) {
-  if (!sr || sr === '不限') return []
-  if (sr.includes('*')) return sr.split('*').filter(Boolean)
-  const map = { '物': '04', '理': '04', '化': '05', '生': '06' }
-  const chars = sr.replace(/[+\s]/g, '')
-  const codes = []
-  for (const ch of chars) {
-    const c = map[ch]
-    if (c) codes.push(c)
-  }
-  return [...new Set(codes)]
-}
 
 function startAssistant() {
   // Guard: data not loaded
@@ -1788,6 +1769,10 @@ function startAssistant() {
   // 过滤 mergedCache（仅推荐 2026 年有招生计划的专业组）
   const results = { '冲': [], '稳': [], '保': [] }
   const data = state.mergedCache || []
+  const algoVal = ALGO_LIST[state.assistantAlgoIdx].value
+  const kws = keyword ? keyword.split(/\s+/).filter(Boolean) : null
+  // 预计算考生选科 Set
+  const userSrCodes = srCode ? new Set(srCode.split('*').filter(Boolean)) : null
 
   for (let i = 0; i < data.length; i++) {
     const g = data[i]
@@ -1799,11 +1784,13 @@ function startAssistant() {
     if (regionProvinces && regionProvinces.indexOf(g.p) === -1) continue
 
     // Subject filter (减量匹配：考生选科 ⊇ 专业要求)
-    if (srCode && !subjectMatch(srCode, g.s)) continue
+    if (userSrCodes && g.s) {
+      const reqCodes = g.s.split('*').filter(Boolean)
+      if (reqCodes.length && !reqCodes.every(c => userSrCodes.has(c))) continue
+    }
 
     // 专业名搜索（多项用空格分隔，OR 匹配）
-    if (keyword) {
-      const kws = keyword.split(/\s+/).filter(Boolean)
+    if (kws) {
       const matchAny = kws.some(function(kw) { return g.g.indexOf(kw) !== -1 })
       if (!matchAny) continue
     }
@@ -1813,8 +1800,7 @@ function startAssistant() {
     if (state.hideCoop && (g.g.indexOf('中外合作') !== -1 || (g.remark && g.remark.indexOf('中外合作') !== -1))) continue
 
     // Calculate tier
-    const algo = ALGO_LIST[state.assistantAlgoIdx].value
-    const tier = calculateTier(score, rank, g, algo)
+    const tier = calculateTier(score, rank, g, algoVal)
     if (tier && results[tier]) {
       results[tier].push(g)
     }
@@ -1823,10 +1809,9 @@ function startAssistant() {
   // Sort within each tier（保：从高到低，冲/稳：从低到高）
   for (const t of ['冲', '稳', '保']) {
     const order = t === '保' ? -1 : 1
-    const algo = ALGO_LIST[state.assistantAlgoIdx].value
     results[t].sort((a, b) => {
-      const sa = getRefScore(b, algo)
-      const sb = getRefScore(a, algo)
+      const sa = getRefScore(b, algoVal)
+      const sb = getRefScore(a, algoVal)
       return order * (sb - sa)
     })
   }
@@ -1866,7 +1851,9 @@ function renderAssistantResults(results, userScore, userRank) {
   }
   container.appendChild(tabBar)
 
-  // Build columns
+  // Build columns — 使用 DocumentFragment 批量追加，减少回流
+  const adjustMap = state.assistantAdjust ? buildGroupMajorMap() : null
+
   for (const t of tiers) {
     const items = results[t]
     const isActive = t === '冲'
@@ -1882,23 +1869,19 @@ function renderAssistantResults(results, userScore, userRank) {
 
     const body = document.createElement('div')
     body.className = 'as-column-body'
-    // 列体滚动 → 显示/隐藏返回顶部按钮
     body.addEventListener('scroll', function () {
       if (_mobileAssistantActive) {
         DOM.floatBtn.style.display = this.scrollTop > 300 ? 'flex' : 'none'
       }
     })
 
-    for (let i = 0; i < items.length; i++) {
-      const g = items[i]
-      // 复用标准卡片渲染
-      // 服从调剂时传入专业组映射表
-      var _adjustMap = state.assistantAdjust ? buildGroupMajorMap() : null
-      const card = renderCardGrouped(g, 'as-' + t + '-' + i, _adjustMap)
-      body.appendChild(card)
-    }
-
-    if (items.length === 0) {
+    if (items.length) {
+      const frag = document.createDocumentFragment()
+      for (let i = 0; i < items.length; i++) {
+        frag.appendChild(renderCardGrouped(items[i], 'as-' + t + '-' + i, adjustMap))
+      }
+      body.appendChild(frag)
+    } else {
       const empty = document.createElement('div')
       empty.className = 'as-empty'
       empty.style.padding = '20px 0'
