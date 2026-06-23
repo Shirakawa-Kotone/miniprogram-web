@@ -55,6 +55,8 @@ const ALGO_LIST = [
   { value: 'min', label: '按最低（最激进）', desc: '仅使用2024-2025年的最低排名（即该专业组录取名次最好的年份）作为参考依据，不使用2026预估排名，不会推荐无历史数据的新增专业。此模式参考的录取门槛最低，给出的冲稳保判断最为激进，适合敢于冲刺且对某专业有强烈意愿的考生。' },
   { value: 'avg', label: '按平均', desc: '仅使用2024-2025年的平均排名作为参考依据，不使用2026预估排名，不会推荐无历史数据的新增专业。此模式用历史平均水平来衡量冲稳保，适合参考往年录取趋势做判断的考生。' },
   { value: 'max', label: '按最高（最保守）', desc: '仅使用2024-2025年的最高排名（即该专业组录取名次最差的年份）作为参考依据，不使用2026预估排名，不会推荐无历史数据的新增专业。此模式参考的录取门槛最高，给出的冲稳保判断最为保守，适合风险承受能力较低的考生。' },
+  { value: 'only2024', label: '仅2024', desc: '仅使用2024年的录取数据作为参考依据，不考虑2025年及2026年预估数据，适合希望完全参照2024年录取情况的考生。' },
+  { value: 'only2025', label: '仅2025', desc: '仅使用2025年的录取数据作为参考依据，不考虑2024年及2026年预估数据，适合希望完全参照2025年录取情况的考生。' },
 ]
 
 // ============================================================
@@ -1623,6 +1625,8 @@ function getRefScore(group, algorithm) {
     if (group.b && group.b.s) scores.push(Number(group.b.s))
     return scores.length ? Math.max(...scores) : 0
   }
+  if (algorithm === 'only2024') return group.a && group.a.s ? Number(group.a.s) : 0
+  if (algorithm === 'only2025') return group.b && group.b.s ? Number(group.b.s) : 0
   // min / avg / max: 仅使用 2024-2025 分数
   const scores = []
   if (group.a && group.a.s) scores.push(Number(group.a.s))
@@ -1700,16 +1704,17 @@ function calculateTier(userScore, userRank, group, algorithm) {
     return null
   }
 
-  // ── min / avg / max — 仅使用 2024-2025 数据 ───────────
+  // ── min / avg / max / only2024 / only2025 — 仅使用历史数据 ──
   const ranks = []
-  if (group.a && group.a.r) ranks.push(group.a.r)
-  if (group.b && group.b.r) ranks.push(group.b.r)
+  if (algorithm !== 'only2025' && group.a && group.a.r) ranks.push(group.a.r)
+  if (algorithm !== 'only2024' && group.b && group.b.r) ranks.push(group.b.r)
 
   let refRank = null
   if (ranks.length > 0) {
     if (algorithm === 'min') refRank = Math.min(...ranks)
     else if (algorithm === 'avg') refRank = ranks.reduce((a, b) => a + b, 0) / ranks.length
     else if (algorithm === 'max') refRank = Math.max(...ranks)
+    else refRank = ranks[0]  // only2024 / only2025
   }
 
   if (userRank && refRank !== null) {
@@ -1720,9 +1725,8 @@ function calculateTier(userScore, userRank, group, algorithm) {
     if (refRank > rankCap) return null
     if (userScore) {
       const scores = []
-      if (group.d && group.d.s) scores.push(group.d.s)
-      if (group.a && group.a.s) scores.push(group.a.s)
-      if (group.b && group.b.s) scores.push(group.b.s)
+      if (algorithm !== 'only2025' && group.a && group.a.s) scores.push(Number(group.a.s))
+      if (algorithm !== 'only2024' && group.b && group.b.s) scores.push(Number(group.b.s))
       if (scores.length > 0) {
         const bestScore = Math.max(...scores)
         if (bestScore < userScore - 15) return null
@@ -1731,12 +1735,11 @@ function calculateTier(userScore, userRank, group, algorithm) {
     return '保'
   }
 
-  // Score-based fallback（所有算法通用）
+  // Score-based fallback（仅使用历史分，不含2026预估分）
   if (userScore) {
     const scores = []
-    if (group.d && group.d.s) scores.push(group.d.s)
-    if (group.a && group.a.s) scores.push(group.a.s)
-    if (group.b && group.b.s) scores.push(group.b.s)
+    if (algorithm !== 'only2025' && group.a && group.a.s) scores.push(Number(group.a.s))
+    if (algorithm !== 'only2024' && group.b && group.b.s) scores.push(Number(group.b.s))
     if (scores.length > 0) {
       const bestScore = Math.max(...scores)
       if (bestScore > userScore + 5) return '冲'
@@ -1798,6 +1801,12 @@ function _execAssistant(score, rank, srCode, regionProvinces, keyword) {
 
     // 仅推荐 2026 年有招生计划的专业组
     if (!g.d) continue
+
+    // 非默认算法：仅推荐有对应历史数据的专业组，不出现"新"专业
+    if (algoVal !== 'default') {
+      const hasHist = algoVal === 'only2024' ? !!g.a : algoVal === 'only2025' ? !!g.b : (g.a || g.b)
+      if (!hasHist) continue
+    }
 
     // Region filter
     if (regionProvinces && regionProvinces.indexOf(g.p) === -1) continue
