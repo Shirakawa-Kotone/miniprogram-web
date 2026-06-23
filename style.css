@@ -1695,3 +1695,30 @@ input[type="number"] {
     display: none;
   }
 }
+
+/* ===== Footer Links ===== */
+.footer-links {
+  text-align: center;
+  padding: 12px 16px 20px;
+  font-size: 13px;
+  color: #86868b;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+.footer-links a {
+  color: #86868b;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.footer-links a:hover {
+  color: #007AFF;
+}
+
+.dark-mode .footer-links,
+.dark-mode .footer-links a {
+  color: #636366;
+}
+.dark-mode .footer-links a:hover {
+  color: #66CCFF;
+}
