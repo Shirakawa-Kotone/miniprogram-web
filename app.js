@@ -1265,8 +1265,8 @@ function getSchoolTag(name) {
 function getSchoolTagHtml(name) {
   const tag = getSchoolTag(name)
   if (!tag) return ''
-  const cls = tag === '985&211' ? 'tag-985-211' : 'tag-' + tag
-  return '<span class="school-tag ' + cls + '">' + escHtml(tag) + '</span>'
+  const parts = tag.split('&')
+  return parts.map(t => '<span class="school-tag tag-' + t + '">' + t + '</span>').join('')
 }
 
 // ============================================================
