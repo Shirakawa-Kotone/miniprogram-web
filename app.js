@@ -608,6 +608,7 @@ function renderCardGrouped(item, idx, groupMajorMap) {
   const header = document.createElement('div')
   header.className = 'card-header'
   header.innerHTML = '<span class="card-name">' + escHtml(item.n) + '</span>' +
+    getSchoolTagHtml(item.n) +
     '<span class="card-code">' + escHtml(item.c) + '</span>' +
     (item.d && !item.a && !item.b ? '<span class="tag-new">新</span>' : '')
   card.appendChild(header)
@@ -739,6 +740,7 @@ function renderCardSingle(record, idx) {
   header.className = 'card-header'
   header.innerHTML = '<span class="card-year">' + escHtml(record[0]) + '</span>' +
     '<span class="card-name">' + escHtml(record[3]) + '</span>' +
+    getSchoolTagHtml(record[3]) +
     '<span class="card-code">' + escHtml(record[2]) + '</span>'
   card.appendChild(header)
 
@@ -1237,6 +1239,37 @@ function escHtml(str) {
 }
 
 // ============================================================
+// 985/211 标签查找
+// ============================================================
+function getSchoolTag(name) {
+  if (!window.SCHOOL_TAGS) return ''
+  if (!getSchoolTag._map) {
+    const map = new Map()
+    const data = window.SCHOOL_TAGS
+    const norm = s => s.replace(/（/g, '(').replace(/）/g, ')')
+    const is985 = new Set(data['985'] ? data['985'].map(norm) : [])
+    const is211 = new Set(data['211'] ? data['211'].map(norm) : [])
+    const allNames = new Set([...is985, ...is211])
+    for (const n of allNames) {
+      const c = []
+      if (is985.has(n)) c.push('985')
+      if (is211.has(n)) c.push('211')
+      map.set(n, c.join('&'))
+    }
+    getSchoolTag._map = map
+  }
+  const normalized = name.replace(/（/g, '(').replace(/）/g, ')')
+  return getSchoolTag._map.get(normalized) || ''
+}
+
+function getSchoolTagHtml(name) {
+  const tag = getSchoolTag(name)
+  if (!tag) return ''
+  const cls = tag === '985&211' ? 'tag-985-211' : 'tag-' + tag
+  return '<span class="school-tag ' + cls + '">' + escHtml(tag) + '</span>'
+}
+
+// ============================================================
 // 引导教程
 // ============================================================
 const TUTORIAL = {
@@ -1476,6 +1509,7 @@ function renderTutorialMerged(d, stepIdx) {
   return '<div class="demo-card">' +
     '<div class="card-header' + (stepIdx === 0 || stepIdx === 1 ? ' row-current' : '') + '" id="hl-0">' +
       '<span class="card-name">' + escHtml(d.n) + '</span>' +
+      getSchoolTagHtml(d.n) +
       '<span class="card-code">' + escHtml(d.c) + '</span>' +
       (d._newLabel ? '<span class="tag-new">新</span>' : '') +
     '</div>' +
@@ -1500,6 +1534,7 @@ function renderTutorialSingle2025(d, stepIdx) {
     '<div class="card-header' + (stepIdx === 0 ? ' row-current' : '') + '" id="hl-0">' +
       '<span class="card-year">' + escHtml(d.year) + '</span>' +
       '<span class="card-name">' + escHtml(d.n) + '</span>' +
+      getSchoolTagHtml(d.n) +
       '<span class="card-code">' + escHtml(d.c) + '</span>' +
     '</div>' +
     '<div class="card-body">' +
@@ -1522,6 +1557,7 @@ function renderTutorialSingle2026(d, stepIdx) {
     '<div class="card-header' + (stepIdx === 0 ? ' row-current' : '') + '" id="hl-0">' +
       '<span class="card-year">' + escHtml(d.year) + '</span>' +
       '<span class="card-name">' + escHtml(d.n) + '</span>' +
+      getSchoolTagHtml(d.n) +
       '<span class="card-code">' + escHtml(d.c) + '</span>' +
     '</div>' +
     '<div class="card-body">' +

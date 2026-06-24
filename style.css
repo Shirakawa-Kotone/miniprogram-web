@@ -557,6 +557,27 @@ input[type="number"] {
   margin-left: auto;
 }
 
+.school-tag {
+  font-size: 10px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  font-weight: normal;
+  margin-left: 0;
+}
+.school-tag.tag-985 {
+  color: #fff;
+  background: #c41230;
+}
+.school-tag.tag-211 {
+  color: #fff;
+  background: #1a4a7a;
+}
+.school-tag.tag-985-211 {
+  color: #fff;
+  background: linear-gradient(135deg, #c41230 50%, #1a4a7a 50%);
+}
+
 .card-body {
   font-size: 13px;
 }
