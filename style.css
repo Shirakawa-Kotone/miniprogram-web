@@ -578,9 +578,12 @@ input[type="number"] {
 }
 
 .school-rank {
-  font-size: 11px;
-  color: var(--text);
-  font-weight: 600;
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: #d4f0ed;
+  color: var(--primary);
+  font-weight: 500;
   margin-left: 4px;
 }
 
@@ -1543,6 +1546,11 @@ input[type="number"] {
 :root.dark-mode .school-tag.tag-985 {
   background: #3a2a1a;
   color: #e8b86a;
+}
+
+:root.dark-mode .school-rank {
+  background: #0a2d2a;
+  color: #39C5BB;
 }
 
 :root.dark-mode .gp-label {
