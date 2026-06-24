@@ -89,6 +89,7 @@ const state = {
   hideSports: false,
   hideCoop: false,
   assistantHideCoop: false,
+  assistantOnly985211: false,
   darkMode: false,
 
   // UI
@@ -908,6 +909,14 @@ function onToggleHideCoop() {
 function onAssistantToggleHideCoop() {
   state.assistantHideCoop = !state.assistantHideCoop
   updateToggleUI('as-toggle-hide-coop', state.assistantHideCoop)
+  if (DOM.assistantResults.style.display !== 'none') {
+    startAssistant()
+  }
+}
+
+function onAssistantToggleOnly985211() {
+  state.assistantOnly985211 = !state.assistantOnly985211
+  updateToggleUI('as-toggle-only-985211', state.assistantOnly985211)
   if (DOM.assistantResults.style.display !== 'none') {
     startAssistant()
   }
@@ -1906,6 +1915,9 @@ function _execAssistant(score, rank, srCode, regionProvinces, keyword) {
     if (state.hideSports && (g.g.indexOf('体育') !== -1 || g.n.indexOf('体育') !== -1)) continue
     if (state.assistantHideCoop && (g.g.indexOf('中外合作') !== -1 || (g.remark && g.remark.indexOf('中外合作') !== -1))) continue
 
+    // 仅推选 985/211
+    if (state.assistantOnly985211 && !getSchoolTag(g.n)) continue
+
     // Calculate tier
     const tier = calculateTier(score, rank, g, algoVal)
     if (tier && results[tier]) {
@@ -2284,6 +2296,7 @@ function bindEvents() {
   document.getElementById('toggle-hide-coop').addEventListener('click', onToggleHideCoop)
   document.getElementById('toggle-adjust').addEventListener('click', onToggleAdjust)
   document.getElementById('as-toggle-hide-coop').addEventListener('click', onAssistantToggleHideCoop)
+  document.getElementById('as-toggle-only-985211').addEventListener('click', onAssistantToggleOnly985211)
   DOM.btnDarkMode.addEventListener('click', onToggleDarkMode)
 
   // Mobile assistant toggle
