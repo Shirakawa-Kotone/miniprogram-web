@@ -169,7 +169,7 @@
               <input class="input input-sm" placeholder="如 计算机 医学(专业之间用空格分隔)" id="as-keyword" />
             </div>
           </div>
-          <!-- 批次选择 -->
+          <!-- 批次选择 + 隐藏中外合作 -->
           <div class="as-row">
             <div class="as-half">
               <span class="as-label">批次选择</span>
@@ -177,12 +177,12 @@
                 <span id="as-batch-label" class="placeholder-text">全部批次</span>
               </div>
             </div>
-          </div>
-          <!-- 隐藏中外合作 -->
-          <div class="as-row" style="gap:3px;">
-            <div class="toggle-item" id="as-toggle-hide-coop" data-toggle="hideCoop" style="flex:none;padding:4px 8px;">
-              <div class="toggle-box"><span class="toggle-check"></span></div>
-              <span class="toggle-label">隐藏中外合作</span>
+            <div class="as-half" style="display:flex;flex-direction:column;">
+              <span class="as-label">隐藏中外合作</span>
+              <div class="toggle-item" id="as-toggle-hide-coop" data-toggle="hideCoop">
+                <div class="toggle-box"><span class="toggle-check"></span></div>
+                <span class="toggle-label">隐藏中外合作</span>
+              </div>
             </div>
           </div>
           <div class="as-row as-row-algo-adjust">
