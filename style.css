@@ -565,12 +565,15 @@ input[type="number"] {
   font-weight: 500;
   margin-left: 0;
 }
+.school-tag.tag-985,
+.school-tag.tag-211 {
+  background: #f5ead6;
+  font-weight: 600;
+}
 .school-tag.tag-985 {
-  background: #fce8d6;
   color: #c87830;
 }
 .school-tag.tag-211 {
-  background: #d6e8ff;
   color: #3a7ac4;
 }
 .school-tag + .school-tag {
@@ -1533,12 +1536,14 @@ input[type="number"] {
   color: #39C5BB;
 }
 
+:root.dark-mode .school-tag.tag-985,
+:root.dark-mode .school-tag.tag-211 {
+  background: #2a2518;
+}
 :root.dark-mode .school-tag.tag-985 {
-  background: #3a2a1a;
   color: #e8b86a;
 }
 :root.dark-mode .school-tag.tag-211 {
-  background: #1a2a3a;
   color: #6aaee8;
 }
 
