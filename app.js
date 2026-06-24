@@ -1101,6 +1101,10 @@ function confirmBatchPicker() {
   DOM.batchModal.style.display = 'none'
   DOM.batchLabel.textContent = state.batchLabel
   DOM.batchLabel.className = state.selectedBatches.length ? '' : 'placeholder-text'
+  if (DOM.asBatchLabel) {
+    DOM.asBatchLabel.textContent = state.batchLabel
+    DOM.asBatchLabel.className = state.selectedBatches.length ? '' : 'placeholder-text'
+  }
   doSearch()
 }
 
@@ -1175,11 +1179,16 @@ function updateFilterUI() {
   // Batch label
   DOM.batchLabel.textContent = state.batchLabel
   DOM.batchLabel.className = state.selectedBatches.length ? '' : 'placeholder-text'
+  if (DOM.asBatchLabel) {
+    DOM.asBatchLabel.textContent = state.batchLabel
+    DOM.asBatchLabel.className = state.selectedBatches.length ? '' : 'placeholder-text'
+  }
 
   // Toggle switches
   updateToggleUI('toggle-only2026', state.only2026)
   updateToggleUI('toggle-hide-sports', state.hideSports)
   updateToggleUI('toggle-hide-coop', state.hideCoop)
+  updateToggleUI('as-toggle-hide-coop', state.hideCoop)
   updateToggleUI('toggle-adjust', state.assistantAdjust)
 
   // Score/rank row visibility: 仅在选择2026单年份时隐藏
@@ -1823,6 +1832,9 @@ function _execAssistant(score, rank, srCode, regionProvinces, keyword) {
       if (!matchAny) continue
     }
 
+    // Batch filter
+    if (state.selectedBatches.length && state.selectedBatches.indexOf(g.batch) === -1) continue
+
     // Skip sports/coop based on existing filters
     if (state.hideSports && (g.g.indexOf('体育') !== -1 || g.n.indexOf('体育') !== -1)) continue
     if (state.hideCoop && (g.g.indexOf('中外合作') !== -1 || (g.remark && g.remark.indexOf('中外合作') !== -1))) continue
@@ -2113,6 +2125,10 @@ function initDOM() {
     btnFeedbackBar: document.getElementById('btn-feedback-bar'),
     btnDarkModeBar: document.getElementById('btn-dark-mode-bar'),
 
+    // Assistant batch picker
+    asBtnBatches: document.getElementById('as-btn-batches'),
+    asBatchLabel: document.getElementById('as-batch-label'),
+
     // Assistant SR picker
     asSrModal: document.getElementById('as-sr-modal'),
     asSrList: document.getElementById('as-sr-list'),
@@ -2200,6 +2216,7 @@ function bindEvents() {
   document.getElementById('toggle-hide-sports').addEventListener('click', onToggleHideSports)
   document.getElementById('toggle-hide-coop').addEventListener('click', onToggleHideCoop)
   document.getElementById('toggle-adjust').addEventListener('click', onToggleAdjust)
+  document.getElementById('as-toggle-hide-coop').addEventListener('click', onToggleHideCoop)
   DOM.btnDarkMode.addEventListener('click', onToggleDarkMode)
 
   // Mobile assistant toggle
@@ -2273,6 +2290,8 @@ function bindEvents() {
     if (e.target === this) finishTutorialAndStart()
   })
 
+  // Assistant — batch picker (复用主面板批次弹窗)
+  DOM.asBtnBatches.addEventListener('click', openBatchPicker)
   // Assistant — SR picker (独立弹窗)
   DOM.asSr.addEventListener('click', openAssistantSR)
   DOM.asSrModal.addEventListener('click', function (e) {
