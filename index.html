@@ -164,24 +164,26 @@
             </div>
           </div>
           <div class="as-row">
-            <div class="as-full">
+            <div class="as-half">
               <span class="as-label">专业意向</span>
               <input class="input input-sm" placeholder="如 计算机 医学(专业之间用空格分隔)" id="as-keyword" />
             </div>
-          </div>
-          <!-- 批次选择 + 隐藏中外合作 -->
-          <div class="as-row">
             <div class="as-half">
               <span class="as-label">批次选择</span>
               <div class="picker picker-sm" id="as-btn-batches">
                 <span id="as-batch-label" class="placeholder-text">全部批次</span>
               </div>
             </div>
-            <div class="as-half" style="display:flex;flex-direction:column;justify-content:flex-end;gap:8px;">
+          </div>
+          <!-- 隐藏中外合作 + 仅推选985/211 -->
+          <div class="as-row">
+            <div class="as-half" style="display:flex;flex-direction:column;justify-content:flex-end;">
               <div class="toggle-item" id="as-toggle-hide-coop" data-toggle="hideCoop">
                 <div class="toggle-box"><span class="toggle-check"></span></div>
                 <span class="toggle-label">隐藏中外合作</span>
               </div>
+            </div>
+            <div class="as-half" style="display:flex;flex-direction:column;justify-content:flex-end;">
               <div class="toggle-item" id="as-toggle-only-985211" data-toggle="only985211">
                 <div class="toggle-box"><span class="toggle-check"></span></div>
                 <span class="toggle-label">仅推选985/211</span>
