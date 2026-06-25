@@ -129,14 +129,14 @@ let DOM = {}
 // ============================================================
 // 数据加载 & 展开（分块处理，支持进度更新）
 // ============================================================
-function expandAllData(callback) {
+function expandAllData(startPct, callback) {
   if (!window.ALL_DATA_RAW) {
     updateProgress(100, '数据文件未加载，请刷新重试')
     if (callback) callback(false)
     return
   }
 
-  updateProgress(25, '正在展开2024年数据...')
+  updateProgress(startPct || 25, '正在展开数据...')
 
   const raw = window.ALL_DATA_RAW
   const { a: provincePool, b: schoolNamePool, c: groupNamePool, d: records, e: extra } = raw
@@ -2448,18 +2448,36 @@ function bindEvents() {
 // 启动
 // ============================================================
 function init() {
-  updateProgress(10, '正在加载数据文件...')
+  // 冻结 CSS 动画当前进度（alldata.js 下载期间 CSS animation 已从 10% 往上推）
+  // 后续第一个 updateProgress 从该值继续而不是硬编码 20%，避免进度倒退
+  const $pf = document.getElementById('progress-fill')
+  let frozenPct = 10
+  if ($pf) {
+    const trackW = $pf.parentElement.clientWidth
+    if (trackW > 0) {
+      const visualPct = Math.round(($pf.getBoundingClientRect().width / trackW) * 100)
+      frozenPct = Math.max(10, Math.min(60, visualPct))
+      $pf.style.animation = 'none'
+      $pf.style.width = frozenPct + '%'
+      const $pct = document.getElementById('load-pct')
+      const $stage = document.getElementById('load-stage')
+      if ($pct) $pct.textContent = frozenPct + '%'
+      if ($stage) $stage.textContent = '正在加载数据文件...'
+    }
+  }
 
   // 延迟执行确保 DOM 已渲染
   setTimeout(() => {
     initDOM()
     bindEvents()
 
-    updateProgress(20, '加载完成，正在初始化界面...')
+    // 从冻结位置继续，保证不会倒退
+    const loadPct = Math.max(frozenPct, 20)
+    updateProgress(loadPct, '加载完成，正在初始化界面...')
 
     // 展开数据（分块异步，带进度）
     setTimeout(() => {
-      expandAllData(function (success) {
+      expandAllData(loadPct, function (success) {
         if (!success) {
           updateProgress(100, '数据加载失败，请刷新页面重试')
           return
