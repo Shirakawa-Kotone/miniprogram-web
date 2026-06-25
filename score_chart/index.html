@@ -4,27 +4,41 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>江西省2026年高考物理类一分一段表</title>
+<script>
+// 深色模式首屏同步（与主站一致，避免闪烁）
+(function(){try{var d=localStorage.getItem('dark_mode');if(d===null)d=window.matchMedia('(prefers-color-scheme:dark)').matches;else d=d==='true';if(d)document.documentElement.classList.add('dark-mode')}catch(e){}})();
+</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html, body { height: 100%; }
-body { background: #f5f5f5; display: flex; flex-direction: column; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; }
-.nav-bar { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; background: #fff; border-bottom: 1px solid #e0e0e0; flex-shrink: 0; }
-.nav-bar a { color: #333; text-decoration: none; font-size: 14px; display: flex; align-items: center; gap: 4px; }
-.nav-bar a:hover { color: #39C5BB; }
-.nav-bar .nav-title { font-size: 14px; color: #666; }
-#chart { flex: 1; background: #fff; border-radius: 0; touch-action: manipulation; }
+:root {
+  --primary: #39C5BB;
+  --text: #333;
+  --text-secondary: #666;
+  --text-muted: #999;
+  --bg: #f5f5f5;
+  --card-bg: #fff;
+  --border: #e0e0e0;
+}
+:root.dark-mode {
+  --primary: #66CCFF;
+  --text: #e0e0e0;
+  --text-secondary: #aaa;
+  --text-muted: #777;
+  --bg: #121212;
+  --card-bg: #1e1e2e;
+  --border: #333;
+}
+body { background: var(--bg); display: flex; flex-direction: column; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; color: var(--text); }
+.nav-bar { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; background: var(--card-bg); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.nav-bar a { color: var(--primary); text-decoration: none; font-size: 14px; display: flex; align-items: center; gap: 4px; }
+.nav-bar .nav-title { font-size: 14px; color: var(--text-secondary); }
+#chart { flex: 1; background: var(--card-bg); border-radius: 0; touch-action: manipulation; }
 #rotate-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1a1a2e; z-index: 9999; flex-direction: column; align-items: center; justify-content: center; color: #fff; font-size: 20px; text-align: center; }
 #rotate-overlay .icon { font-size: 64px; margin-bottom: 20px; animation: rotate-phone 2s ease-in-out infinite; }
 @keyframes rotate-phone { 0%,100% { transform: rotate(0deg); } 50% { transform: rotate(90deg); } }
 @media (orientation: portrait) and (max-width: 768px) { #rotate-overlay { display: flex; } body { overflow: hidden; } }
-@media (prefers-color-scheme: dark) {
-  body { background: #1a1a1a; }
-  .nav-bar { background: #2a2a2a; border-color: #444; }
-  .nav-bar a { color: #ddd; }
-  .nav-bar .nav-title { color: #999; }
-  #chart { background: #1e1e1e; }
-}
 </style>
 </head>
 <body>
@@ -39,99 +53,118 @@ const scores = [698,697,696,695,694,693,692,691,690,689,688,687,686,685,684,683,
 const counts = [31,4,5,7,1,13,12,12,14,12,14,12,15,16,16,17,35,38,28,36,43,25,33,32,43,38,52,60,55,53,56,53,59,76,72,78,73,111,93,105,98,90,119,86,105,89,114,109,117,122,110,134,134,140,167,118,175,181,157,171,189,184,185,195,174,193,237,232,218,213,242,242,249,232,253,224,252,275,267,286,274,263,312,282,322,305,324,307,331,328,367,336,370,386,358,366,387,385,393,357,417,431,429,448,457,448,438,479,446,447,534,484,469,479,490,491,494,506,532,548,549,542,549,538,610,580,551,625,628,566,646,599,651,618,671,649,655,643,650,656,707,733,690,692,717,726,739,768,722,750,755,766,760,805,812,791,742,820,781,804,797,806,824,850,893,873,858,850,838,881,871,883,918,903,863,928,883,911,969,942,965,930,967,992,923,958,926,989,1001,999,990,1003,982,1025,974,988,959,1009,1060,1011,1026,971,1023,1061,1015,1058,1012,1093,1010,1074,1073,1068,1058,1086,1156,1071,1045,1080,1055,1027,1060,1071,1038,1073,1121,1106,1091,990,1122,1057,1056,1025,1056,1024,1062,1071,1051,1033,1088,1020,1074,975,1036,981,1035,1035,986,1035,989,1033,1050,999,927,985,952,971,903,956,917,910,883,920,929,931,909,891,852,831,880,888,887,812,843,828,841,792,826,782,781,792,826,808,815,784,762,745,713,699,724,719,681,677,731,733,711,662,705,702,721,634,706,665,616,628,673,599,574,614,638,583,600,655,516,592,599,590,555,536,549,559,550,525,531,513,530,517,495,541,519,516,462,494,518,438,543,505,469,481,476,443,437,469,411,393,417,386,395,393,412,372,389,346,425,388,363,370,390,384,356,383,354,334,343,361,372,360,313,375,298,342,331,282,327,315,297,343,307,310,322,312,291,277,288,273,274,326,285,259,281,273,284,303,268,280,267,297,272,238,262,253,256,240,240,248,252,224,248,232,240,229,204,241,226,252,207,251,226,195,224,215,202,192,211,184,235,213,196,201,205,206,196,208,194,186,194,205,188,189,155,173,182,174,204,193,167,148,142,176,161,162,155,165,154,165,147,171,149,164,152,179,140,143,135,130,163,134,130,116,101,132,98,111,124,104,101,129,88,96,98,91,99,95,105,70,64,74,63,76,87,65,71,56,45,52,57,52,42,49,43,51,37,55,42,31,26,39,31,30,38,33,24,22,20,25,24,24,23,26,23,13,15,17,19,18,9,17,12,11,14,20,11,9,16,12,11,9,16,12,10,6,10,10,8,7,5,8,6,8,5,4,6,5,6,7,10,3,6,8,5,9,12,4,1,4,5,4,10,7,7,4,5,7,5,8,4,1,5,2,6,2,3,4,1,4,4,5,6,2,5,5,5,4,4,3,6,4];
 const cumulatives = [31,35,40,47,48,61,73,85,99,111,125,137,152,168,184,201,236,274,302,338,381,406,439,471,514,552,604,664,719,772,828,881,940,1016,1088,1166,1239,1350,1443,1548,1646,1736,1855,1941,2046,2135,2249,2358,2475,2597,2707,2841,2975,3115,3282,3400,3575,3756,3913,4084,4273,4457,4642,4837,5011,5204,5441,5673,5891,6104,6346,6588,6837,7069,7322,7546,7798,8073,8340,8626,8900,9163,9475,9757,10079,10384,10708,11015,11346,11674,12041,12377,12747,13133,13491,13857,14244,14629,15022,15379,15796,16227,16656,17104,17561,18009,18447,18926,19372,19819,20353,20837,21306,21785,22275,22766,23260,23766,24298,24846,25395,25937,26486,27024,27634,28214,28765,29390,30018,30584,31230,31829,32480,33098,33769,34418,35073,35716,36366,37022,37729,38462,39152,39844,40561,41287,42026,42794,43516,44266,45021,45787,46547,47352,48164,48955,49697,50517,51298,52102,52899,53705,54529,55379,56272,57145,58003,58853,59691,60572,61443,62326,63244,64147,65010,65938,66821,67732,68701,69643,70608,71538,72505,73497,74420,75378,76304,77293,78294,79293,80283,81286,82268,83293,84267,85255,86214,87223,88283,89294,90320,91291,92314,93375,94390,95448,96460,97553,98563,99637,100710,101778,102836,103922,105078,106149,107194,108274,109329,110356,111416,112487,113525,114598,115719,116825,117916,118906,120028,121085,122141,123166,124222,125246,126308,127379,128430,129463,130551,131571,132645,133620,134656,135637,136672,137707,138693,139728,140717,141750,142800,143799,144726,145711,146663,147634,148537,149493,150410,151320,152203,153123,154052,154983,155892,156783,157635,158466,159346,160234,161121,161933,162776,163604,164445,165237,166063,166845,167626,168418,169244,170052,170867,171651,172413,173158,173871,174570,175294,176013,176694,177371,178102,178835,179546,180208,180913,181615,182336,182970,183676,184341,184957,185585,186258,186857,187431,188045,188683,189266,189866,190521,191037,191629,192228,192818,193373,193909,194458,195017,195567,196092,196623,197136,197666,198183,198678,199219,199738,200254,200716,201210,201728,202166,202709,203214,203683,204164,204640,205083,205520,205989,206400,206793,207210,207596,207991,208384,208796,209168,209557,209903,210328,210716,211079,211449,211839,212223,212579,212962,213316,213650,213993,214354,214726,215086,215399,215774,216072,216414,216745,217027,217354,217669,217966,218309,218616,218926,219248,219560,219851,220128,220416,220689,220963,221289,221574,221833,222114,222387,222671,222974,223242,223522,223789,224086,224358,224596,224858,225111,225367,225607,225847,226095,226347,226571,226819,227051,227291,227520,227724,227965,228191,228443,228650,228901,229127,229322,229546,229761,229963,230155,230366,230550,230785,230998,231194,231395,231600,231806,232002,232210,232404,232590,232784,232989,233177,233366,233521,233694,233876,234050,234254,234447,234614,234762,234904,235080,235241,235403,235558,235723,235877,236042,236189,236360,236509,236673,236825,237004,237144,237287,237422,237552,237715,237849,237979,238095,238196,238328,238426,238537,238661,238765,238866,238995,239083,239179,239277,239368,239467,239562,239667,239737,239801,239875,239938,240014,240101,240166,240237,240293,240338,240390,240447,240499,240541,240590,240633,240684,240721,240776,240818,240849,240875,240914,240945,240975,241013,241046,241070,241092,241112,241137,241161,241185,241208,241234,241257,241270,241285,241302,241321,241339,241348,241365,241377,241388,241402,241422,241433,241442,241458,241470,241481,241490,241506,241518,241528,241534,241544,241554,241562,241569,241574,241582,241588,241596,241601,241605,241611,241616,241622,241629,241639,241642,241648,241656,241661,241670,241682,241686,241687,241691,241696,241700,241710,241717,241724,241728,241733,241740,241745,241753,241757,241758,241763,241765,241771,241773,241776,241780,241781,241785,241789,241794,241800,241802,241807,241812,241817,241821,241825,241828,241834,241838];
 
-const chart = echarts.init(document.getElementById('chart'));
-const option = {
+const isDark = document.documentElement.classList.contains('dark-mode');
+
+function getThemeOpt(dark) {
+  const axisColor = dark ? '#aaa' : '#666';
+  const splitColor = dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
+  return {
     tooltip: {
-        trigger: 'axis',
-        formatter: function(params) {
-            const score = params[0].axisValue;
-            let count = '', cum = '';
-            params.forEach(p => {
-                if (p.seriesName === '同分人数') count = p.value;
-                if (p.seriesName === '累计人数') cum = p.value;
-            });
-            return `<b>${score}分</b><br/>同分人数: ${count}人<br/>≥该分累计: ${cum}人`;
-        }
+      trigger: 'axis',
+      backgroundColor: dark ? 'rgba(30,30,46,0.95)' : 'rgba(255,255,255,0.95)',
+      borderColor: dark ? '#444' : '#ccc',
+      textStyle: { color: dark ? '#e0e0e0' : '#333', fontSize: 12 },
+      formatter: function(params) {
+        const score = params[0].axisValue;
+        let count = '', cum = '';
+        params.forEach(p => {
+          if (p.seriesName === '同分人数') count = p.value;
+          if (p.seriesName === '累计人数') cum = p.value;
+        });
+        return '<b>' + score + '分</b><br/>同分人数: ' + count + '人<br/>≥该分累计: ' + cum + '人';
+      }
     },
     legend: {
-        data: ['同分人数', '累计人数'],
-        top: 10
+      data: ['同分人数', '累计人数'],
+      top: 10,
+      textStyle: { color: axisColor }
     },
     grid: {
-        left: '3%',
-        right: '4%',
-        bottom: 50,
-        containLabel: true
+      left: '3%', right: '4%', bottom: 50, containLabel: true
     },
     xAxis: {
-        type: 'category',
-        data: scores,
-        axisLabel: {
-            rotate: 90,
-            fontSize: 9,
-            interval: 2
-        },
-        name: '分数',
-        nameTextStyle: { fontSize: 12 },
-        axisPointer: { label: { align: 'center' } }
+      type: 'category',
+      data: scores,
+      axisLabel: { rotate: 90, fontSize: 9, interval: 2, color: axisColor },
+      name: '分数',
+      nameTextStyle: { fontSize: 12, color: axisColor },
+      axisLine: { lineStyle: { color: splitColor } },
+      axisPointer: { label: { align: 'center' } }
     },
     yAxis: [
-        {
-            type: 'value',
-            name: '同分人数',
-            position: 'left',
-            splitLine: { show: true, lineStyle: { type: 'dashed' } },
-            min: 0,
-            axisLabel: { formatter: function(v) { return Math.round(v); } }
-        },
-        {
-            type: 'value',
-            name: '累计人数',
-            position: 'right',
-            splitLine: { show: false }
-        }
+      {
+        type: 'value', name: '同分人数', position: 'left',
+        splitLine: { show: true, lineStyle: { color: splitColor, type: 'dashed' } },
+        min: 0,
+        axisLabel: { color: axisColor, formatter: function(v) { return Math.round(v); } },
+        nameTextStyle: { color: axisColor },
+        axisLine: { lineStyle: { color: splitColor } }
+      },
+      {
+        type: 'value', name: '累计人数', position: 'right',
+        splitLine: { show: false },
+        axisLabel: { color: axisColor },
+        nameTextStyle: { color: axisColor },
+        axisLine: { lineStyle: { color: splitColor } }
+      }
     ],
     dataZoom: [
-        { type: 'slider', start: 0, end: 100, bottom: 6, height: 36,
-          borderColor: '#ccc', backgroundColor: 'rgba(47,69,84,0.03)',
-          fillerColor: 'rgba(84,112,198,0.25)',
-          handleSize: 16, handleStyle: { color: '#5470c6', borderColor: '#5470c6' },
-          labelPrecision: 0, textStyle: { fontSize: 11 } }
+      { type: 'slider', start: 0, end: 100, bottom: 6, height: 36,
+        borderColor: dark ? '#444' : '#ccc',
+        backgroundColor: dark ? 'rgba(255,255,255,0.03)' : 'rgba(47,69,84,0.03)',
+        fillerColor: dark ? 'rgba(102,204,255,0.25)' : 'rgba(84,112,198,0.25)',
+        handleSize: 16,
+        handleStyle: { color: dark ? '#66CCFF' : '#5470c6', borderColor: dark ? '#66CCFF' : '#5470c6' },
+        labelPrecision: 0,
+        textStyle: { fontSize: 11, color: axisColor },
+        dataBackground: {
+          lineStyle: { color: dark ? '#555' : '#ccc' },
+          areaStyle: { color: dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }
+        },
+        selectedDataBackground: {
+          lineStyle: { color: dark ? '#66CCFF' : '#5470c6' },
+          areaStyle: { color: dark ? 'rgba(102,204,255,0.15)' : 'rgba(84,112,198,0.15)' }
+        }
+      }
     ],
     series: [
-        {
-            name: '同分人数',
-            type: 'bar',
-            data: counts,
-            itemStyle: { color: '#5470c6', opacity: 0.85 },
-            yAxisIndex: 0,
-            barMaxWidth: 8,
-            barGap: '-100%',
-            barCategoryGap: '20%'
-        },
-        {
-            name: '累计人数',
-            type: 'line',
-            data: cumulatives,
-            itemStyle: { color: '#e8743c' },
-            lineStyle: { width: 2 },
-            yAxisIndex: 1,
-            symbol: 'none',
-            smooth: true,
-            areaStyle: {
-                color: {
-                    type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
-                    colorStops: [
-                        { offset: 0, color: 'rgba(232,116,60,0.25)' },
-                        { offset: 1, color: 'rgba(232,116,60,0.02)' }
-                    ]
-                }
-            }
+      {
+        name: '同分人数', type: 'bar', data: counts,
+        itemStyle: { color: dark ? '#66CCFF' : '#5470c6', opacity: 0.85 },
+        yAxisIndex: 0, barMaxWidth: 8, barGap: '-100%', barCategoryGap: '20%'
+      },
+      {
+        name: '累计人数', type: 'line', data: cumulatives,
+        itemStyle: { color: '#e8743c' },
+        lineStyle: { width: 2 }, yAxisIndex: 1,
+        symbol: 'none', smooth: true,
+        areaStyle: {
+          color: {
+            type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+            colorStops: [
+              { offset: 0, color: 'rgba(232,116,60,0.25)' },
+              { offset: 1, color: 'rgba(232,116,60,0.02)' }
+            ]
+          }
         }
+      }
     ]
-};
-chart.setOption(option);
-window.addEventListener('resize', () => chart.resize());
+  };
+}
+
+const chart = echarts.init(document.getElementById('chart'));
+chart.setOption(getThemeOpt(isDark));
+window.addEventListener('resize', function() { chart.resize(); });
+
+// 监听深色模式切换（通过 localStorage）
+window.addEventListener('storage', function(e) {
+  if (e.key === 'dark_mode') {
+    var dark = e.newValue === 'true';
+    document.documentElement.classList.toggle('dark-mode', dark);
+    chart.setOption(getThemeOpt(dark));
+    chart.resize();
+  }
+});
 
 // Landscape lock detection for mobile
 (function() {
