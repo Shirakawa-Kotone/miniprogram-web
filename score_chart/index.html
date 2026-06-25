@@ -104,7 +104,7 @@ function getThemeOpt(dark) {
       textStyle: { color: axisColor }
     },
     grid: {
-      left: '3%', right: '4%', bottom: 50, containLabel: true
+      left: '3%', right: '4%', bottom: 70, containLabel: true
     },
     xAxis: {
       type: 'category',
@@ -133,21 +133,29 @@ function getThemeOpt(dark) {
       }
     ],
     dataZoom: [
-      { type: 'slider', start: 0, end: 100, bottom: 10, height: 40,
-        borderColor: dark ? '#444' : '#ccc',
-        backgroundColor: dark ? 'rgba(255,255,255,0.03)' : 'rgba(47,69,84,0.03)',
-        fillerColor: dark ? 'rgba(102,204,255,0.25)' : 'rgba(57,197,187,0.25)',
-        handleSize: 28,
+      {
+        type: 'inside', start: 0, end: 100,
+        zoomOnMouseWheel: true,
+        moveOnMouseMove: true,
+        moveOnMouseWheel: true,
+        preventDefaultMouseMove: true
+      },
+      { type: 'slider', start: 0, end: 100, bottom: 15, height: 48,
+        borderColor: dark ? '#555' : '#bbb',
+        backgroundColor: dark ? 'rgba(255,255,255,0.05)' : 'rgba(47,69,84,0.05)',
+        fillerColor: dark ? 'rgba(102,204,255,0.3)' : 'rgba(57,197,187,0.3)',
+        handleSize: 36,
         handleStyle: { color: dark ? '#66CCFF' : '#39C5BB', borderColor: dark ? '#66CCFF' : '#39C5BB' },
+        borderWidth: 1,
         labelPrecision: 0,
-        textStyle: { fontSize: 11, color: axisColor },
+        textStyle: { fontSize: 12, color: axisColor },
         dataBackground: {
-          lineStyle: { color: dark ? '#555' : '#ccc' },
+          lineStyle: { color: dark ? '#555' : '#ccc', width: 1 },
           areaStyle: { color: dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }
         },
         selectedDataBackground: {
-          lineStyle: { color: dark ? '#66CCFF' : '#39C5BB' },
-          areaStyle: { color: dark ? 'rgba(102,204,255,0.15)' : 'rgba(57,197,187,0.15)' }
+          lineStyle: { color: dark ? '#66CCFF' : '#39C5BB', width: 1 },
+          areaStyle: { color: dark ? 'rgba(102,204,255,0.2)' : 'rgba(57,197,187,0.2)' }
         }
       }
     ],
@@ -176,18 +184,12 @@ function getThemeOpt(dark) {
   };
 }
 
-const chart = echarts.init(document.getElementById('chart'));
+const chartEl = document.getElementById('chart');
+const chart = echarts.init(chartEl);
 const opts = getThemeOpt(isDark);
-// 精确指针（鼠标）允许拖动，粗略指针（触屏）只允许缩放
-// 使用 pointer media query 区分，不依赖页面宽度
-const hasFinePointer = window.matchMedia('(pointer: fine)').matches;
-opts.dataZoom.unshift({
-  type: 'inside', start: 0, end: 100,
-  zoomOnMouseWheel: true,
-  moveOnMouseMove: hasFinePointer,
-  moveOnMouseWheel: hasFinePointer
-});
 chart.setOption(opts);
+// 确保 chart 内所有元素（含 SVG）不拦截触摸事件
+chartEl.style.touchAction = 'none';
 window.addEventListener('resize', function() { chart.resize(); });
 
 // 监听深色模式切换（通过 localStorage）
