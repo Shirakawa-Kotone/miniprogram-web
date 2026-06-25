@@ -183,7 +183,7 @@ function getThemeOpt(dark) {
 }
 
 const chartEl = document.getElementById('chart');
-const chart = echarts.init(chartEl);
+const chart = echarts.init(chartEl, null, { renderer: 'svg' });
 const opts = getThemeOpt(isDark);
 chart.setOption(opts);
 // 确保 chart 内所有元素（含 SVG）不拦截触摸事件
