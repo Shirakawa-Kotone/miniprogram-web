@@ -8,7 +8,7 @@
 // 深色模式首屏同步（与主站一致，避免闪烁）
 (function(){try{var d=localStorage.getItem('dark_mode');if(d===null)d=window.matchMedia('(prefers-color-scheme:dark)').matches;else d=d==='true';if(d)document.documentElement.classList.add('dark-mode')}catch(e){}})();
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.6.0/echarts.min.js"></script>
+<script src="lib/echarts.min.js"></script>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html, body { height: 100%; }
@@ -41,10 +41,6 @@ body { background: var(--bg); display: flex; flex-direction: column; font-family
 #rotate-overlay .rotate-hint { font-size: 15px; color: rgba(255,255,255,0.6); line-height: 1.5; }
 @keyframes rotate-phone { 0%,100% { transform: rotate(0deg); } 50% { transform: rotate(90deg); } }
 @media (orientation: portrait) and (max-width: 768px) { #rotate-overlay { display: flex; } body { overflow: hidden; } }
-.zoom-bar { display: flex; align-items: center; justify-content: center; gap: 16px; padding: 6px 16px 10px; background: var(--card-bg); flex-shrink: 0; border-top: 1px solid var(--border); }
-.zoom-btn { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--primary); background: var(--card-bg); color: var(--primary); font-size: 24px; font-weight: bold; cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; }
-.zoom-btn:active { background: var(--primary); color: var(--card-bg); }
-.zoom-range { font-size: 13px; color: var(--text-secondary); min-width: 80px; text-align: center; }
 </style>
 </head>
 <body>
@@ -54,11 +50,6 @@ body { background: var(--bg); display: flex; flex-direction: column; font-family
   <span></span>
 </div>
 <div id="chart"></div>
-<div class="zoom-bar" id="zoom-bar">
-  <div class="zoom-btn" id="zoom-out">−</div>
-  <span class="zoom-range" id="zoom-range">显示范围</span>
-  <div class="zoom-btn" id="zoom-in">+</div>
-</div>
 <div id="rotate-overlay">
   <div class="icon">📱</div>
   <div class="rotate-text">请将设备旋转至横屏</div>
@@ -208,27 +199,6 @@ var taTimer = setInterval(function() {
   }
 }, 100);
 window.addEventListener('resize', function() { chart.resize(); });
-
-// 缩放按钮
-var zoomStep = 6;
-function dzRng(idx) { var dz = chart.getOption().dataZoom; return dz ? { s: dz[idx].start, e: dz[idx].end } : null; }
-function updateZoomRange() {
-  var r = dzRng(1);
-  if (r) document.getElementById('zoom-range').textContent = r.s + '% – ' + r.e + '%';
-}
-function zoomDelta(delta) {
-  var r = dzRng(1); if (!r) return;
-  var s2 = Math.max(0, Math.min(100 + delta, r.s + delta));
-  var e2 = Math.min(100, Math.max(0 + delta, r.e - delta));
-  if (s2 >= e2) return;
-  chart.dispatchAction({ type: 'dataZoom', dataZoomIndex: 0, start: s2, end: e2 });
-  chart.dispatchAction({ type: 'dataZoom', dataZoomIndex: 1, start: s2, end: e2 });
-  setTimeout(updateZoomRange, 50);
-}
-document.getElementById('zoom-in').addEventListener('click', function() { zoomDelta(3); });
-document.getElementById('zoom-out').addEventListener('click', function() { zoomDelta(-3); });
-chart.on('dataZoom', updateZoomRange);
-setTimeout(updateZoomRange, 500);
 
 // 监听深色模式切换（通过 localStorage）
 window.addEventListener('storage', function(e) {
