@@ -135,15 +135,15 @@ function getThemeOpt(dark) {
       },
       {
         name: '累计人数', type: 'line', data: cumulatives,
-        itemStyle: { color: dark ? '#4DB8E8' : '#2DA89F' },
+        itemStyle: { color: dark ? '#f0a030' : '#d4a040' },
         lineStyle: { width: 2 }, yAxisIndex: 1,
         symbol: 'none', smooth: true,
         areaStyle: {
           color: {
             type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
             colorStops: [
-              { offset: 0, color: dark ? 'rgba(77,184,232,0.25)' : 'rgba(45,168,159,0.25)' },
-              { offset: 1, color: dark ? 'rgba(77,184,232,0.02)' : 'rgba(45,168,159,0.02)' }
+              { offset: 0, color: dark ? 'rgba(240,160,48,0.25)' : 'rgba(212,160,64,0.25)' },
+              { offset: 1, color: dark ? 'rgba(240,160,48,0.02)' : 'rgba(212,160,64,0.02)' }
             ]
           }
         }
