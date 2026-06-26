@@ -2391,10 +2391,20 @@ function bindEvents() {
   DOM.asRank.addEventListener('keydown', function (e) {
     if (e.key === 'Enter') startAssistant()
   })
-  // 用户手动输入排名时清除自动换算高亮
+  // 用户修改排名时清除自动换算高亮 + 隐藏推荐结果
   DOM.asRank.addEventListener('input', function () {
     this.classList.remove('as-rank-auto')
     DOM.asRankHint.style.display = 'none'
+    if (DOM.assistantResults.style.display !== 'none') exitAssistant()
+  })
+  // 用户修改分数时清除已自动换算的排名 + 隐藏推荐结果
+  DOM.asScore.addEventListener('input', function () {
+    if (DOM.asRank.classList.contains('as-rank-auto')) {
+      DOM.asRank.value = ''
+      DOM.asRank.classList.remove('as-rank-auto')
+      DOM.asRankHint.style.display = 'none'
+    }
+    if (DOM.assistantResults.style.display !== 'none') exitAssistant()
   })
 
   // Assistant section collapse toggle
