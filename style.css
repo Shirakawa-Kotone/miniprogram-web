@@ -594,8 +594,8 @@ input[type="number"] {
   font-size: 10px;
   padding: 1px 6px;
   border-radius: 3px;
-  background: #d4f0ed;
-  color: var(--primary);
+  background: #CCEBFF;
+  color: #66CCFF;
   font-weight: 500;
   margin-left: 4px;
 }
