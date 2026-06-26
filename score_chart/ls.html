@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>江西省2026年高考历史类一分一段表</title>
+<script>
+// 深色模式首屏同步（与主站一致，避免闪烁）
+(function(){try{var d=localStorage.getItem('dark_mode');if(d===null)d=window.matchMedia('(prefers-color-scheme:dark)').matches;else d=d==='true';if(d)document.documentElement.classList.add('dark-mode')}catch(e){}})();
+</script>
+<script src="lib/echarts.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; }
+:root {
+  --primary: #39C5BB;
+  --text: #333;
+  --text-secondary: #666;
+  --text-muted: #999;
+  --bg: #f5f5f5;
+  --card-bg: #fff;
+  --border: #e0e0e0;
+}
+:root.dark-mode {
+  --primary: #66CCFF;
+  --text: #e0e0e0;
+  --text-secondary: #aaa;
+  --text-muted: #777;
+  --bg: #121212;
+  --card-bg: #1e1e2e;
+  --border: #333;
+}
+body { background: var(--bg); display: flex; flex-direction: column; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; color: var(--text); }
+.nav-bar { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; background: var(--card-bg); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.nav-bar a { color: var(--primary); text-decoration: none; font-size: 14px; display: flex; align-items: center; gap: 4px; }
+.nav-bar .nav-title { font-size: 14px; color: var(--text-secondary); }
+#chart { flex: 1; background: var(--card-bg); border-radius: 0; touch-action: none; }
+#rotate-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1a1a2e; z-index: 9999; flex-direction: column; align-items: center; justify-content: center; color: #fff; text-align: center; padding: 40px; }
+#rotate-overlay .icon { font-size: 64px; margin-bottom: 24px; animation: rotate-phone 2s ease-in-out infinite; }
+#rotate-overlay .rotate-text { font-size: 22px; font-weight: 600; margin-bottom: 12px; }
+#rotate-overlay .rotate-hint { font-size: 15px; color: rgba(255,255,255,0.6); line-height: 1.5; }
+@keyframes rotate-phone { 0%,100% { transform: rotate(0deg); } 50% { transform: rotate(90deg); } }
+@media (orientation: portrait) and (max-width: 768px) { #rotate-overlay { display: flex; } body { overflow: hidden; } }
+</style>
+</head>
+<body>
+<div class="nav-bar">
+  <a href="../history/">&larr; 返回查询</a>
+  <span class="nav-title">江西省2026年高考历史类一分一段表</span>
+  <span></span>
+</div>
+<div id="chart"></div>
+<div id="rotate-overlay">
+  <div class="icon">📱</div>
+  <div class="rotate-text">请将设备旋转至横屏</div>
+  <div class="rotate-hint">横屏模式可查看完整的一分一段分布图</div>
+</div>
+<script>
+const scores = [
+663,662,661,660,659,658,657,656,655,654,653,652,651,650,649,648,647,646,645,644,
+643,642,641,640,639,638,637,636,635,634,633,632,631,630,629,628,627,626,625,624,
+623,622,621,620,619,618,617,616,615,614,613,612,611,610,609,608,607,606,605,604,
+603,602,601,600,599,598,597,596,595,594,593,592,591,590,589,588,587,586,585,584,
+583,582,581,580,579,578,577,576,575,574,573,572,571,570,569,568,567,566,565,564,
+563,562,561,560,559,558,557,556,555,554,553,552,551,550,549,548,547,546,545,544,
+543,542,541,540,539,538,537,536,535,534,533,532,531,530,529,528,527,526,525,524,
+523,522,521,520,519,518,517,516,515,514,513,512,511,510,509,508,507,506,505,504,
+503,502,501,500,499,498,497,496,495,494,493,492,491,490,489,488,487,486,485,484,
+483,482,481,480,479,478,477,476,475,474,473,472,471,470,469,468,467,466,465,464,
+463,462,461,460,459,458,457,456,455,454,453,452,451,450,449,448,447,446,445,444,
+443,442,441,440,439,438,437,436,435,434,433,432,431,430,429,428,427,426,425,424,
+423,422,421,420,419,418,417,416,415,414,413,412,411,410,409,408,407,406,405,404,
+403,402,401,400,399,398,397,396,395,394,393,392,391,390,389,388,387,386,385,384,
+383,382,381,380,379,378,377,376,375,374,373,372,371,370,369,368,367,366,365,364,
+363,362,361,360,359,358,357,356,355,354,353,352,351,350,349,348,347,346,345,344,
+343,342,341,340,339,338,337,336,335,334,333,332,331,330,329,328,327,326,325,324,
+323,322,321,320,319,318,317,316,315,314,313,312,311,310,309,308,307,306,305,304,
+303,302,301,300,299,298,297,296,295,294,293,292,291,290,289,288,287,286,285,284,
+283,282,281,280,279,278,277,276,275,274,273,272,271,270,269,268,267,266,265,264,
+263,262,261,260,259,258,257,256,255,254,253,252,251,250,249,248,247,246,245,244,
+243,242,241,240,239,238,237,236,235,234,233,232,231,230,229,228,227,226,225,224,
+223,222,221,220,219,218,217,216,215,214,213,212,211,210,209,208,207,206,205,204,
+203,202,201,200,199,198,197,196,195,194,193,192,191,190,189,188,187,186,185,184,
+183,182,181,180,179,178,177,176,175,174,173,172,171,170,169,168,167,166,165,164,
+163,162,161,160,159,158,157,156,155,154,153,152,151,150,149,148,147,146,145,144,
+143,142,141,140,139,138,137,136,135,134,133,132,131,130,129,128,127,126,125,124,
+123,122,121,120,119,118,117,116,115,114,113,112,111,110,109,108,107,106,105,104,
+103,102,101,100];
+const counts = [
+24,1,2,6,2,4,7,4,6,5,4,5,4,3,11,7,9,14,15,14,
+18,7,22,16,14,12,13,15,22,22,31,22,22,25,31,35,25,30,33,34,
+33,46,43,43,43,50,47,59,61,51,62,47,67,56,63,72,63,76,80,88,
+91,95,77,91,103,88,116,117,122,89,122,96,101,134,136,120,151,148,153,134,
+151,166,148,163,163,196,173,187,186,182,184,213,204,215,240,230,229,223,240,257,
+263,265,283,278,285,271,318,288,266,323,296,288,342,307,311,335,339,376,381,360,
+407,400,372,395,409,424,421,411,437,478,419,446,456,443,430,494,495,477,479,458,
+508,488,485,494,499,507,496,511,500,524,570,530,549,542,513,540,533,562,524,561,
+586,554,570,585,539,577,489,571,550,532,567,601,590,583,585,546,576,581,566,573,
+571,593,559,567,552,591,572,512,542,560,532,590,527,538,498,515,589,613,564,530,
+578,523,544,543,538,514,526,555,532,563,560,544,506,518,538,504,561,528,529,501,
+553,527,513,537,512,522,495,525,571,497,514,525,521,495,570,512,552,537,505,551,
+506,517,517,517,540,501,550,556,493,536,518,505,533,572,522,540,532,572,523,519,
+485,540,512,548,549,512,520,508,539,560,563,563,577,571,576,571,517,563,592,551,
+555,604,567,570,547,595,561,549,528,572,567,562,574,548,555,608,540,582,581,610,
+590,562,586,575,603,578,584,568,530,594,528,603,552,586,561,571,562,523,571,542,
+549,579,549,539,560,507,561,549,546,536,543,564,513,539,525,512,548,517,507,511,
+501,477,509,530,503,538,521,506,493,576,489,504,450,487,502,524,511,446,463,473,
+454,451,470,475,465,439,483,457,411,433,425,410,421,423,387,392,394,391,398,404,
+397,359,389,380,380,341,371,400,343,344,319,356,335,308,344,342,300,310,326,335,
+322,289,287,262,266,271,291,258,289,270,265,241,275,258,261,247,245,252,234,227,
+189,249,217,208,211,177,202,201,195,202,200,175,200,168,150,171,167,169,150,146,
+129,135,152,120,134,135,121,103,123,125,123,120,107,92,104,108,80,85,75,86,
+83,64,88,78,71,65,79,70,66,57,61,51,53,47,52,52,47,41,48,36,
+34,46,33,38,44,33,38,33,32,23,38,32,36,28,25,38,26,29,28,26,
+24,21,20,31,20,26,21,22,18,22,17,21,22,13,15,22,15,18,20,10,
+14,10,14,10,15,15,10,12,12,12,12,10,5,10,9,15,17,5,7,3,
+8,6,4,4,9,2,6,1,8,3,2,3,7,4,2,3,6,5,6,4,
+5,3,12,6];
+const cumulatives = [
+24,25,27,33,35,39,46,50,56,61,65,70,74,77,88,95,104,118,133,147,
+165,172,194,210,224,236,249,264,286,308,339,361,383,408,439,474,499,529,562,596,
+629,675,718,761,804,854,901,960,1021,1072,1134,1181,1248,1304,1367,1439,1502,1578,1658,1746,
+1837,1932,2009,2100,2203,2291,2407,2524,2646,2735,2857,2953,3054,3188,3324,3444,3595,3743,3896,4030,
+4181,4347,4495,4658,4821,5017,5190,5377,5563,5745,5929,6142,6346,6561,6801,7031,7260,7483,7723,7980,
+8243,8508,8791,9069,9354,9625,9943,10231,10497,10820,11116,11404,11746,12053,12364,12699,13038,13414,13795,14155,
+14562,14962,15334,15729,16138,16562,16983,17394,17831,18309,18728,19174,19630,20073,20503,20997,21492,21969,22448,22906,
+23414,23902,24387,24881,25380,25887,26383,26894,27394,27918,28488,29018,29567,30109,30622,31162,31695,32257,32781,33342,
+33928,34482,35052,35637,36176,36753,37242,37813,38363,38895,39462,40063,40653,41236,41821,42367,42943,43524,44090,44663,
+45234,45827,46386,46953,47505,48096,48668,49180,49722,50282,50814,51404,51931,52469,52967,53482,54071,54684,55248,55778,
+56356,56879,57423,57966,58504,59018,59544,60099,60631,61194,61754,62298,62804,63322,63860,64364,64925,65453,65982,66483,
+67036,67563,68076,68613,69125,69647,70142,70667,71238,71735,72249,72774,73295,73790,74360,74872,75424,75961,76466,77017,
+77523,78040,78557,79074,79614,80115,80665,81221,81714,82250,82768,83273,83806,84378,84900,85440,85972,86544,87067,87586,
+88071,88611,89123,89671,90220,90732,91252,91760,92299,92859,93422,93985,94562,95133,95709,96280,96797,97360,97952,98503,
+99058,99662,100229,100799,101346,101941,102502,103051,103579,104151,104718,105280,105854,106402,106957,107565,108105,108687,109268,109878,
+110468,111030,111616,112191,112794,113372,113956,114524,115054,115648,116176,116779,117331,117917,118478,119049,119611,120134,120705,121247,
+121796,122375,122924,123463,124023,124530,125091,125640,126186,126722,127265,127829,128342,128881,129406,129918,130466,130983,131490,132001,
+132502,132979,133488,134018,134521,135059,135580,136086,136579,137155,137644,138148,138598,139085,139587,140111,140622,141068,141531,142004,
+142458,142909,143379,143854,144319,144758,145241,145698,146109,146542,146967,147377,147798,148221,148608,149000,149394,149785,150183,150587,
+150984,151343,151732,152112,152492,152833,153204,153604,153947,154291,154610,154966,155301,155609,155953,156295,156595,156905,157231,157566,
+157888,158177,158464,158726,158992,159263,159554,159812,160101,160371,160636,160877,161152,161410,161671,161918,162163,162415,162649,162876,
+163065,163314,163531,163739,163950,164127,164329,164530,164725,164927,165127,165302,165502,165670,165820,165991,166158,166327,166477,166623,
+166752,166887,167039,167159,167293,167428,167549,167652,167775,167900,168023,168143,168250,168342,168446,168554,168634,168719,168794,168880,
+168963,169027,169115,169193,169264,169329,169408,169478,169544,169601,169662,169713,169766,169813,169865,169917,169964,170005,170053,170089,
+170123,170169,170202,170240,170284,170317,170355,170388,170420,170443,170481,170513,170549,170577,170602,170640,170666,170695,170723,170749,
+170773,170794,170814,170845,170865,170891,170912,170934,170952,170974,170991,171012,171034,171047,171062,171084,171099,171117,171137,171147,
+171161,171171,171185,171195,171210,171225,171235,171247,171259,171271,171283,171293,171298,171308,171317,171332,171349,171354,171361,171364,
+171372,171378,171382,171386,171395,171397,171403,171404,171412,171415,171417,171420,171427,171431,171433,171436,171442,171447,171453,171457,
+171462,171465,171477,171483];
+
+const isDark = document.documentElement.classList.contains('dark-mode');
+
+function getThemeOpt(dark) {
+  const axisColor = dark ? '#aaa' : '#666';
+  const splitColor = dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
+  return {
+    tooltip: {
+      trigger: 'axis',
+      triggerOn: 'mousemove|click',
+      backgroundColor: dark ? 'rgba(30,30,46,0.95)' : 'rgba(255,255,255,0.95)',
+      borderColor: dark ? '#444' : '#ccc',
+      textStyle: { color: dark ? '#e0e0e0' : '#333', fontSize: 12 },
+      formatter: function(params) {
+        const score = params[0].axisValue;
+        let count = '', cum = '';
+        params.forEach(p => {
+          if (p.seriesName === '同分人数') count = p.value;
+          if (p.seriesName === '累计人数') cum = p.value;
+        });
+        return '<b>' + score + '分</b><br/>同分人数: ' + count + '人<br/>≥该分累计: ' + cum + '人';
+      }
+    },
+    axisPointer: {
+      type: 'cross',
+      snap: true,
+      label: {
+        backgroundColor: dark ? 'rgba(30,30,46,0.9)' : 'rgba(255,255,255,0.9)',
+        borderColor: dark ? '#555' : '#ccc',
+        textStyle: { color: dark ? '#e0e0e0' : '#333', fontSize: 10 }
+      },
+      lineStyle: {
+        color: dark ? 'rgba(102,204,255,0.5)' : 'rgba(57,197,187,0.5)',
+        type: 'dashed'
+      },
+      crossStyle: {
+        color: dark ? 'rgba(102,204,255,0.3)' : 'rgba(57,197,187,0.3)'
+      },
+      z: -10
+    },
+    legend: {
+      data: ['同分人数', '累计人数'],
+      top: 10,
+      textStyle: { color: axisColor }
+    },
+    grid: {
+      left: '3%', right: '4%', bottom: 70, containLabel: true
+    },
+    xAxis: {
+      type: 'category',
+      data: scores,
+      axisLabel: { rotate: 90, fontSize: 9, interval: 2, color: axisColor },
+      name: '分数',
+      nameTextStyle: { fontSize: 12, color: axisColor },
+      axisLine: { lineStyle: { color: splitColor } },
+      axisPointer: { label: { align: 'center' } }
+    },
+    yAxis: [
+      {
+        type: 'value', name: '同分人数', position: 'left',
+        splitLine: { show: true, lineStyle: { color: splitColor, type: 'dashed' } },
+        min: 0,
+        axisLabel: { color: axisColor, formatter: function(v) { return Math.round(v); } },
+        nameTextStyle: { color: axisColor },
+        axisLine: { lineStyle: { color: splitColor } }
+      },
+      {
+        type: 'value', name: '累计人数', position: 'right',
+        splitLine: { show: false },
+        axisLabel: { color: axisColor },
+        nameTextStyle: { color: axisColor },
+        axisLine: { lineStyle: { color: splitColor } }
+      }
+    ],
+    dataZoom: [
+      {
+        type: 'inside', start: 5, end: 95,
+        zoomOnMouseWheel: true,
+        moveOnMouseWheel: true
+      },
+      { type: 'slider', start: 5, end: 95, bottom: 15, height: 48, z: 100,
+        borderColor: dark ? '#555' : '#bbb',
+        backgroundColor: dark ? 'rgba(255,255,255,0.05)' : 'rgba(47,69,84,0.05)',
+        fillerColor: dark ? 'rgba(102,204,255,0.3)' : 'rgba(57,197,187,0.3)',
+        handleSize: 36,
+        handleStyle: { color: dark ? '#66CCFF' : '#39C5BB', borderColor: dark ? '#66CCFF' : '#39C5BB' },
+        borderWidth: 1,
+        labelPrecision: 0,
+        textStyle: { fontSize: 12, color: axisColor },
+        dataBackground: {
+          lineStyle: { color: dark ? '#555' : '#ccc', width: 1 },
+          areaStyle: { color: dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }
+        },
+        selectedDataBackground: {
+          lineStyle: { color: dark ? '#66CCFF' : '#39C5BB', width: 1 },
+          areaStyle: { color: dark ? 'rgba(102,204,255,0.2)' : 'rgba(57,197,187,0.2)' }
+        }
+      }
+    ],
+    series: [
+      {
+        name: '同分人数', type: 'bar', data: counts,
+        itemStyle: { color: dark ? '#66CCFF' : '#39C5BB', opacity: 0.85 },
+        yAxisIndex: 0, barMaxWidth: 8, barGap: '-100%', barCategoryGap: '20%'
+      },
+      {
+        name: '累计人数', type: 'line', data: cumulatives,
+        itemStyle: { color: dark ? '#f0a030' : '#d4a040' },
+        lineStyle: { width: 2 }, yAxisIndex: 1,
+        symbol: 'none', smooth: true,
+        areaStyle: {
+          color: {
+            type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+            colorStops: [
+              { offset: 0, color: dark ? 'rgba(240,160,48,0.25)' : 'rgba(212,160,64,0.25)' },
+              { offset: 1, color: dark ? 'rgba(240,160,48,0.02)' : 'rgba(212,160,64,0.02)' }
+            ]
+          }
+        }
+      }
+    ]
+  };
+}
+
+const chartEl = document.getElementById('chart');
+const chart = echarts.init(chartEl, null, { renderer: 'svg' });
+const opts = getThemeOpt(isDark);
+chart.setOption(opts);
+// 确保 chart 内所有元素（含 SVG）不拦截触摸事件
+chartEl.style.touchAction = 'none';
+// ECharts 创建 SVG 根元素后强制设置 touch-action
+var taTimer = setInterval(function() {
+  var svg = chartEl.querySelector('svg');
+  if (svg) {
+    svg.style.setProperty('touch-action', 'none', 'important');
+    svg.style.setProperty('-ms-touch-action', 'none', 'important');
+    clearInterval(taTimer);
+  }
+}, 100);
+window.addEventListener('resize', function() { chart.resize(); });
+
+// 监听深色模式切换（通过 localStorage）
+window.addEventListener('storage', function(e) {
+  if (e.key === 'dark_mode') {
+    var dark = e.newValue === 'true';
+    document.documentElement.classList.toggle('dark-mode', dark);
+    chart.setOption(getThemeOpt(dark));
+    chart.resize();
+  }
+});
+
+// Landscape lock detection for mobile
+(function() {
+  var overlay = document.getElementById('rotate-overlay');
+  function checkOrientation() {
+    if (window.innerWidth <= 768) {
+      var isPortrait = window.innerHeight > window.innerWidth;
+      overlay.style.display = isPortrait ? 'flex' : 'none';
+      document.body.style.overflow = isPortrait ? 'hidden' : '';
+      if (!isPortrait) chart.resize();
+    } else {
+      overlay.style.display = 'none';
+      document.body.style.overflow = '';
+    }
+  }
+  window.addEventListener('resize', checkOrientation);
+  checkOrientation();
+  // Try to force landscape via screen.orientation API (Android browsers)
+  if (typeof screen !== 'undefined' && screen.orientation && screen.orientation.lock) {
+    screen.orientation.lock('landscape').catch(function(){});
+  }
+})();
+</script>
+</body>
+</html>
