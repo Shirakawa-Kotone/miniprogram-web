@@ -162,7 +162,17 @@ function getThemeOpt(dark) {
       {
         name: '同分人数', type: 'bar', data: counts,
         itemStyle: { color: dark ? '#66CCFF' : '#39C5BB', opacity: 0.85 },
-        yAxisIndex: 0, barMaxWidth: 8, barGap: '-100%', barCategoryGap: '20%'
+        yAxisIndex: 0, barMaxWidth: 8, barGap: '-100%', barCategoryGap: '20%',
+        markLine: {
+          silent: true, symbol: 'none',
+          lineStyle: { color: '#e74c3c', width: 2, type: 'dashed' },
+          label: { formatter: function(p){return p.name;}, color: dark ? '#ff6b6b' : '#c0392b', fontSize: 11, position: 'insideEndTop' },
+          data: [
+            { xAxis: 505, name: '特控线 505' },
+            { xAxis: 412, name: '本科线 412' },
+            { xAxis: 200, name: '专科线 200' },
+          ]
+        }
       },
       {
         name: '累计人数', type: 'line', data: cumulatives,
