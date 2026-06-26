@@ -76,6 +76,8 @@ const state = {
   provinceLabel: '全部省份',
   selectedBatches: [],
   batchLabel: '全部批次',
+  asSelectedBatches: [],
+  asBatchLabel: '全部批次',
   code: '',
   name: '',
   srIdx: 0,
@@ -122,6 +124,9 @@ const state = {
 
 // DOM references (set once on init)
 let DOM = {}
+
+// 批次选择上下文：'search' | 'assistant'
+let _batchCtx = 'search'
 
 // ============================================================
 // 数据加载 & 展开（分块处理，支持进度更新）
@@ -1066,9 +1071,11 @@ function renderProvincePicker() {
 // ============================================================
 // 批次多选弹窗
 // ============================================================
-function openBatchPicker() {
-  state.tempSelectedBatches = [...state.selectedBatches]
-  state.tempBatchChecked = BATCH_ALL.map(b => state.selectedBatches.indexOf(b) !== -1)
+function openBatchPicker(ctx) {
+  _batchCtx = ctx || 'search'
+  const src = _batchCtx === 'assistant' ? state.asSelectedBatches : state.selectedBatches
+  state.tempSelectedBatches = [...src]
+  state.tempBatchChecked = BATCH_ALL.map(b => src.indexOf(b) !== -1)
   renderBatchPicker()
   DOM.batchModal.style.display = 'flex'
 }
@@ -1102,16 +1109,25 @@ function clearBatches() {
 }
 
 function confirmBatchPicker() {
-  state.selectedBatches = [...state.tempSelectedBatches]
-  state.batchLabel = getBatchLabel(state.selectedBatches)
+  const target = _batchCtx === 'assistant' ? state.asSelectedBatches : state.selectedBatches
+  const labelKey = _batchCtx === 'assistant' ? 'asBatchLabel' : 'batchLabel'
+  const labelEl = _batchCtx === 'assistant' ? DOM.asBatchLabel : DOM.batchLabel
+
+  target.length = 0
+  target.push(...state.tempSelectedBatches)
+  state[labelKey] = getBatchLabel(target)
   DOM.batchModal.style.display = 'none'
-  DOM.batchLabel.textContent = state.batchLabel
-  DOM.batchLabel.className = state.selectedBatches.length ? '' : 'placeholder-text'
-  if (DOM.asBatchLabel) {
-    DOM.asBatchLabel.textContent = state.batchLabel
-    DOM.asBatchLabel.className = state.selectedBatches.length ? '' : 'placeholder-text'
+  labelEl.textContent = state[labelKey]
+  labelEl.className = target.length ? '' : 'placeholder-text'
+
+  if (_batchCtx === 'assistant') {
+    // 刷新推荐结果
+    if (DOM.assistantResults.style.display !== 'none') {
+      startAssistant()
+    }
+  } else {
+    doSearch()
   }
-  doSearch()
 }
 
 function renderBatchPicker() {
@@ -1186,8 +1202,8 @@ function updateFilterUI() {
   DOM.batchLabel.textContent = state.batchLabel
   DOM.batchLabel.className = state.selectedBatches.length ? '' : 'placeholder-text'
   if (DOM.asBatchLabel) {
-    DOM.asBatchLabel.textContent = state.batchLabel
-    DOM.asBatchLabel.className = state.selectedBatches.length ? '' : 'placeholder-text'
+    DOM.asBatchLabel.textContent = state.asBatchLabel
+    DOM.asBatchLabel.className = state.asSelectedBatches.length ? '' : 'placeholder-text'
   }
 
   // Toggle switches
@@ -1845,8 +1861,8 @@ function _execAssistant(score, rank, srCode, regionProvinces, keyword) {
       if (!matchAny) continue
     }
 
-    // Batch filter
-    if (state.selectedBatches.length && state.selectedBatches.indexOf(g.batch) === -1) continue
+    // Batch filter（使用推荐面板独立的批次选择）
+    if (state.asSelectedBatches.length && state.asSelectedBatches.indexOf(g.batch) === -1) continue
 
     // Skip sports/coop based on existing filters
     if (state.hideSports && (g.g.indexOf('体育') !== -1 || g.n.indexOf('体育') !== -1)) continue
@@ -2219,7 +2235,7 @@ function bindEvents() {
   DOM.btnConfirmSR.addEventListener('click', confirmSR)
 
   // Batch picker
-  DOM.btnBatches.addEventListener('click', openBatchPicker)
+  DOM.btnBatches.addEventListener('click', function () { openBatchPicker('search') })
   DOM.batchModal.addEventListener('click', function (e) {
     if (e.target === this) closeBatchPicker()
   })
@@ -2308,7 +2324,7 @@ function bindEvents() {
   })
 
   // Assistant — batch picker (复用主面板批次弹窗)
-  DOM.asBtnBatches.addEventListener('click', openBatchPicker)
+  DOM.asBtnBatches.addEventListener('click', function () { openBatchPicker('assistant') })
   // Assistant — SR picker (独立弹窗)
   DOM.asSr.addEventListener('click', openAssistantSR)
   DOM.asSrModal.addEventListener('click', function (e) {

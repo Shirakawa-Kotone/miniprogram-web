@@ -16,6 +16,7 @@
 
 ### 修复
 
+- **搜索与推荐的批次选择不再联动**：`selectedBatches` 状态此前被搜索和推荐面板共享，双方使用同一批次弹窗设置时会互相覆盖。新增独立 `asSelectedBatches` / `asBatchLabel` 状态，批次弹窗根据调用方（`_batchCtx`）读写对应状态。
 - **历史版服从调剂崩溃**：`buildGroupMajorMap()` 中 `yearIdx` 未定义导致函数崩溃；已改为遍历所有年份记录。
 - **历史版缺失 985/211 标签**：`alldata.js` 缺少 `window.SCHOOL_TAGS` 定义；已补入与物理版相同的院校标签数据。
 - **备注展开点不动（历史 & 物理）**：`makeRemarkToggle` 点击处理使用 `parseInt(this.dataset.remarkIdx)`，推荐页面的字符串 key（如 `"as-冲-0"`）被 `parseInt` 转为 `NaN`，导致 key 不匹配无法切换。改为直接使用字符串 key。
