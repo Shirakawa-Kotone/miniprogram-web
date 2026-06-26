@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>2024-2026高考录取数据查询</title>
-  <meta name="description" content="江西省2024-2026年高考录取数据查询，支持院校、专业、分数、排名等多维度筛选">
+  <title>2024-2025高考录取数据查询（历史类）</title>
+  <meta name="description" content="江西省2024-2025年高考录取数据查询（历史类），支持院校、专业、分数、排名等多维度筛选">
   <meta name="theme-color" content="#39C5BB">
   <link rel="stylesheet" href="style.css">
   <link rel="preload" href="alldata.js" as="script">
@@ -34,13 +34,11 @@
             <span class="tab active" data-year="" data-action="year">全部</span>
             <span class="tab" data-year="2024" data-action="year">2024</span>
             <span class="tab" data-year="2025" data-action="year">2025</span>
-            <span class="tab" data-year="2026" data-action="year">2026</span>
           </div>
           <div class="header-actions">
             <span class="help-btn" id="btn-help">帮助</span>
             <span class="help-btn" id="btn-feedback">反馈</span>
             <span class="dark-toggle" id="btn-dark-mode"><svg viewBox="0 0 24 24" width="1.2em" height="1.2em"><path fill="currentColor" d="M7.5 2c-1.79 1.15-3 3.18-3 5.5s1.21 4.35 3.03 5.5C4.46 13 2 10.54 2 7.5A5.5 5.5 0 0 1 7.5 2m11.57 1.5l1.43 1.43L4.93 20.5L3.5 19.07zm-6.18 2.43L11.41 5L9.97 6l.42-1.7L9 3.24l1.75-.12l.58-1.65L12 3.1l1.73.03l-1.35 1.13zm-3.3 3.61l-1.16-.73l-1.12.78l.34-1.32l-1.09-.83l1.36-.09l.45-1.29l.51 1.27l1.36.03l-1.05.87zM19 13.5a5.5 5.5 0 0 1-5.5 5.5c-1.22 0-2.35-.4-3.26-1.07l7.69-7.69c.67.91 1.07 2.04 1.07 3.26m-4.4 6.58l2.77-1.15l-.24 3.35zm4.33-2.7l1.15-2.77l2.2 2.54zm1.15-4.96l-1.14-2.78l3.34.24zM9.63 18.93l2.77 1.15l-2.53 2.19z"></path></svg></span>
-            <a class="help-btn" href="score_chart/">一分一段</a>
             <span class="help-btn as-toggle-btn" id="btn-as-toggle">志愿推荐</span>
           </div>
         </div>
@@ -109,10 +107,6 @@
 
         <!-- 筛选开关 -->
         <div class="filter-row toggle-row">
-          <div class="toggle-item" id="toggle-only2026" data-toggle="only2026">
-            <div class="toggle-box"><span class="toggle-check"></span></div>
-            <span class="toggle-label">仅2026招生</span>
-          </div>
           <div class="toggle-item" id="toggle-hide-sports" data-toggle="hideSports">
             <div class="toggle-box"><span class="toggle-check"></span></div>
             <span class="toggle-label">隐藏体育</span>
@@ -168,7 +162,7 @@
           <div class="as-row">
             <div class="as-half">
               <span class="as-label">专业意向</span>
-              <input class="input input-sm" placeholder="如 计算机 医学(专业之间用空格分隔)" id="as-keyword" />
+              <input class="input input-sm" placeholder="如 法学 新闻 教育(专业之间用空格分隔)" id="as-keyword" />
             </div>
             <div class="as-half">
               <span class="as-label">批次选择</span>
@@ -181,7 +175,7 @@
             <div class="as-algo-picker-section">
               <span class="as-label">推荐算法</span>
               <div class="picker picker-sm" id="btn-algo">
-                <span id="algo-label">默认（可推荐新专业）</span>
+                <span id="algo-label">默认</span>
               </div>
             </div>
             <div class="toggle-item algo-toggle" id="toggle-adjust" data-toggle="adjust">
@@ -221,7 +215,6 @@
       <div class="result-bar-actions">
         <span class="help-btn" id="btn-help-bar">帮助</span>
         <span class="help-btn" id="btn-feedback-bar">反馈</span>
-        <a class="help-btn" href="score_chart/">一分一段</a>
         <span class="dark-toggle" id="btn-dark-mode-bar"><svg viewBox="0 0 24 24" width="1.2em" height="1.2em"><path fill="currentColor" d="M7.5 2c-1.79 1.15-3 3.18-3 5.5s1.21 4.35 3.03 5.5C4.46 13 2 10.54 2 7.5A5.5 5.5 0 0 1 7.5 2m11.57 1.5l1.43 1.43L4.93 20.5L3.5 19.07zm-6.18 2.43L11.41 5L9.97 6l.42-1.7L9 3.24l1.75-.12l.58-1.65L12 3.1l1.73.03l-1.35 1.13zm-3.3 3.61l-1.16-.73l-1.12.78l.34-1.32l-1.09-.83l1.36-.09l.45-1.29l.51 1.27l1.36.03l-1.05.87zM19 13.5a5.5 5.5 0 0 1-5.5 5.5c-1.22 0-2.35-.4-3.26-1.07l7.69-7.69c.67.91 1.07 2.04 1.07 3.26m-4.4 6.58l2.77-1.15l-.24 3.35zm4.33-2.7l1.15-2.77l2.2 2.54zm1.15-4.96l-1.14-2.78l3.34.24zM9.63 18.93l2.77 1.15l-2.53 2.19z"></path></svg></span>
       </div>
       <span class="toggle-filter-btn" id="toggle-filter">收起筛选</span>
@@ -247,7 +240,7 @@
 
     <!-- 底部链接 -->
     <div class="footer-links">
-      <a href="changelog/" target="_blank">📋 更新日志</a>
+      <a href="../changelog/" target="_blank">📋 更新日志</a>
       <a href="https://github.com/Shirakawa-Kotone/miniprogram-web" target="_blank" rel="noopener">
         <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
         GitHub
@@ -354,7 +347,6 @@
       <div class="mode-tabs" id="tutorial-tabs">
         <span class="mode-tab active" data-mode="merged">全部对比</span>
         <span class="mode-tab" data-mode="single2025">2025录取</span>
-        <span class="mode-tab" data-mode="single2026">2026计划</span>
       </div>
       <div class="tutorial-card-area">
         <div class="tutorial-scroll" id="tutorial-scroll">

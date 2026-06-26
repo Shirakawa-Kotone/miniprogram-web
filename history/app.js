@@ -6,8 +6,8 @@
 // ============================================================
 // 常量
 // ============================================================
-const SR_RMAP = ['04*05', '04', '04*06', '04*05*06']
-const SR_MAP = { '04': '物理', '05': '化学', '06': '生物' }
+const SR_RMAP = ['08', '08*07', '08*07*09', '08*09']
+const SR_MAP = { '08': '历史', '07': '思想政治', '09': '地理' }
 
 const PROVINCES_ALL = [
   '安徽', '北京', '重庆', '福建', '甘肃', '广东', '广西', '贵州',
@@ -16,8 +16,8 @@ const PROVINCES_ALL = [
   '天津', '西藏', '香港', '新疆', '云南', '浙江'
 ]
 
-const SR_LIST = ['不限', '物化生', '物化政', '物化地', '物政生', '物政地', '物生地']
-const SR_CODES = ['', '04*05*06', '04*05', '04*05', '04*06', '04', '04*06']
+const SR_LIST = ['不限', '历政地', '历政生', '历地生', '历政化', '历地化', '历生化']
+const SR_CODES = ['', '08*07*09', '08*07', '08*09', '08*07', '08*09', '08']
 let BATCH_ALL = []  // 动态填充：从展开数据中提取的唯一批次列表
 const PAGE_SIZE = 30
 const SEARCH_DEBOUNCE = 200
@@ -47,16 +47,15 @@ const REGIONS = {
 const REGION_NAMES = Object.keys(REGIONS)
 
 // 辅助面板选科选项（3+1+2 实际组合）
-const AS_SR_LIST = ['物化生', '物化政', '物化地', '物政生', '物政地', '物生地']
-const AS_SR_CODES = ['04*05*06', '04*05', '04*05', '04*06', '04', '04*06']
+const AS_SR_LIST = ['历政地', '历政生', '历地生', '历政化', '历地化', '历生化']
+const AS_SR_CODES = ['08*07*09', '08*07', '08*09', '08*07', '08*09', '08']
 
 const ALGO_LIST = [
-  { value: 'default', label: '默认（可推荐新专业）', desc: '优先使用2026年预估排名划定冲稳保，若无2026预估排名数据则参考2024-2025年平均排名。此模式下2026年新增的院校专业组也能获得推荐，适合希望全面了解所有可选机会的考生。' },
-  { value: 'min', label: '按最低（最激进）', desc: '仅使用2024-2025年的最低排名（即该专业组录取名次最好的年份）作为参考依据，不使用2026预估排名，不会推荐无历史数据的新增专业。此模式参考的录取门槛最低，给出的冲稳保判断最为激进，适合敢于冲刺且对某专业有强烈意愿的考生。' },
-  { value: 'avg', label: '按平均', desc: '仅使用2024-2025年的平均排名作为参考依据，不使用2026预估排名，不会推荐无历史数据的新增专业。此模式用历史平均水平来衡量冲稳保，适合参考往年录取趋势做判断的考生。' },
-  { value: 'max', label: '按最高（最保守）', desc: '仅使用2024-2025年的最高排名（即该专业组录取名次最差的年份）作为参考依据，不使用2026预估排名，不会推荐无历史数据的新增专业。此模式参考的录取门槛最高，给出的冲稳保判断最为保守，适合风险承受能力较低的考生。' },
-  { value: 'only2024', label: '仅2024', desc: '仅使用2024年的录取数据作为参考依据，不考虑2025年及2026年预估数据，适合希望完全参照2024年录取情况的考生。' },
-  { value: 'only2025', label: '仅2025', desc: '仅使用2025年的录取数据作为参考依据，不考虑2024年及2026年预估数据，适合希望完全参照2025年录取情况的考生。' },
+  { value: 'default', label: '默认', desc: '参考2024-2025年的平均排名划定冲稳保，适合希望全面了解所有可选机会的考生。' },
+  { value: 'min', label: '按最低（最激进）', desc: '使用2024-2025年的最低排名（即该专业组录取名次最好的年份）作为参考依据。此模式参考的录取门槛最低，给出的冲稳保判断最为激进，适合敢于冲刺的考生。' },
+  { value: 'max', label: '按最高（最保守）', desc: '使用2024-2025年的最高排名（即该专业组录取名次最差的年份）作为参考依据。此模式参考的录取门槛最高，给出的冲稳保判断最为保守。' },
+  { value: 'only2024', label: '仅2024', desc: '仅使用2024年的录取数据作为参考依据。' },
+  { value: 'only2025', label: '仅2025', desc: '仅使用2025年的录取数据作为参考依据。' },
 ]
 
 // ============================================================
@@ -67,7 +66,6 @@ const state = {
   allData: [],          // 全量展开数据
   allData2024: [],
   allData2025: [],
-  allData2026: [],
   mergedCache: null,    // 合并缓存（全部模式）
   searchCache: [],      // 搜索结果缓存
   searchIsGrouped: false,
@@ -85,7 +83,6 @@ const state = {
   groupCode: '',
   minScore: '',
   maxRank: '',
-  only2026: false,
   hideSports: false,
   hideCoop: false,
   assistantHideCoop: false,
@@ -130,7 +127,7 @@ let DOM = {}
 // 数据加载 & 展开（分块处理，支持进度更新）
 // ============================================================
 function expandAllData(startPct, callback) {
-  if (!window.ALL_DATA_RAW) {
+  if (!window.LISHI_DATA_RAW) {
     updateProgress(100, '数据文件未加载，请刷新重试')
     if (callback) callback(false)
     return
@@ -138,18 +135,16 @@ function expandAllData(startPct, callback) {
 
   updateProgress(startPct || 25, '正在展开数据...')
 
-  const raw = window.ALL_DATA_RAW
+  const raw = window.LISHI_DATA_RAW
   const { a: provincePool, b: schoolNamePool, c: groupNamePool, d: records, e: extra } = raw
-  const { b: batchPool, p: planPool, g: gcPool, f: feePool, r: remarkPool, sl: schoolLinkPool } = extra
+  const { b: batchPool, p: planPool, g: gcPool, f: feePool, r: remarkPool } = extra
   const out = new Array(records.length)
-  const yearMap = ['2024', '2025', '2026']
+  const yearMap = ['2024', '2025']
   const TOTAL = records.length
 
   // 按年份分三段处理：2024(0-22472), 2025(22472-47184), 2026(47184-74163)
   const yearRanges = [
-    { start: 0, end: 22471, label: '2024', pct: 35 },
-    { start: 22472, end: 47183, label: '2025', pct: 45 },
-    { start: 47184, end: TOTAL - 1, label: '2026', pct: 55 },
+    { start: 0, end: TOTAL - 1, label: '全部数据', pct: 35 },
   ]
 
   let rangeIdx = 0
@@ -199,7 +194,7 @@ function expandAllData(startPct, callback) {
           remarkPool[r[13]] || '',
           srCode ? srCode.split('*').map(s => SR_MAP[s] || s).join(' ') : '不限',
           r[14] !== undefined ? gcPool[r[14]] || '' : '',
-          schoolLinkPool ? schoolLinkPool[r[3]] || '' : '',
+          '',
         ]
       }
       pos = chunkEnd
@@ -277,11 +272,6 @@ function buildMergedCache() {
       if (!row.a) row.a = { s: r[6], r: r[7], e: r[8] }
     } else if (yr === '2025') {
       if (!row.b) row.b = { s: r[6], r: r[7], e: r[8] }
-    } else {
-      if (!row.d) row.d = { s: r[6], r: r[7], e: r[8], code: r[15], link: r[16] || '' }
-      // 2026 数据覆盖行级别字段，优先使用最新信息
-      row.gc = r[11]; row.batch = r[9]
-      row.plan = r[10]; row.fee = r[12]
     }
   }
   // 摊平：每行成为一个独立条目
@@ -290,7 +280,7 @@ function buildMergedCache() {
     for (const row of grp.rows.values()) {
       state.mergedCache.push({
         p: grp.p, c: grp.c, n: grp.n, s: grp.s, g: grp.g,
-        a: row.a, b: row.b, d: row.d,
+        a: row.a, b: row.b,
         batch: row.batch, plan: row.plan, gc: row.gc, fee: row.fee,
         remark: row.remark, _sd: row._sd,
         _vr: row._vr,
@@ -310,25 +300,16 @@ function buildBatchList() {
 }
 
 // ============================================================
-// 同专业组其他专业映射表（基于 2026 年数据）
-// ============================================================
 function buildGroupMajorMap() {
   if (state._groupMajorMapCache) return state._groupMajorMapCache
   const map = new Map()
-  const yearIdx = 2 // 2026
-  const raw = window.ALL_DATA_RAW
+  const raw = window.LISHI_DATA_RAW
   if (!raw) return map
-  const { a: provincePool, b: schoolNamePool, c: groupNamePool, d: records, e: extra } = raw
-  const { b: batchPool, p: planPool, g: gcPool, f: feePool, r: remarkPool } = extra
+  const { b: schoolNamePool, c: groupNamePool, d: records, e: extra } = raw
+  const { g: gcPool, f: feePool, r: remarkPool } = extra
 
-  const yearRanges = [
-    { start: 0, end: 22471 },
-    { start: 22472, end: 47183 },
-    { start: 47184, end: records.length - 1 },
-  ]
-  const { start, end } = yearRanges[yearIdx]
-
-  for (let i = start; i <= end; i++) {
+  // 遍历所有年份（2024 + 2025），搜集同专业组下的全部专业
+  for (let i = 0; i < records.length; i++) {
     const r = records[i]
     const school = schoolNamePool[r[3]] || ''
     const groupCode = gcPool[r[11]] || ''
@@ -361,8 +342,8 @@ function parseSR(sr) {
 
 // 选科兼容性匹配：学生的选科组合需包含专业要求的全部科目
 function isSrCompatible(studentCode, requirementCode) {
-  if (!requirementCode) return true
-  if (!studentCode) return false
+  if (!requirementCode) return true  // 专业不限选科
+  if (!studentCode) return false     // 未选科则不匹配
   const required = requirementCode.split('*')
   const student = studentCode.split('*')
   return required.every(s => student.includes(s))
@@ -384,7 +365,6 @@ function computeDiffs(g, vr) {
   const yrs = []
   if (g.a) yrs.push('2024')
   if (g.b) yrs.push('2025')
-  if (g.d) yrs.push('2026')
   if (yrs.length < 2) return null
   const diffs = []
   const fields = [
@@ -427,7 +407,7 @@ function doSearch() {
 
   const t0 = Date.now()
 
-  const { year, selectedProvinces, selectedBatches, code, name, srIdx, groupName, groupCode, minScore, maxRank, only2026, hideSports, hideCoop } = state
+  const { year, selectedProvinces, selectedBatches, code, name, srIdx, groupName, groupCode, minScore, maxRank, hideSports, hideCoop } = state
   const sr = srIdx > 0 ? SR_CODES[srIdx] : ''
   const ms = parseInt(minScore) || 0
   const mr = parseInt(maxRank) || 0
@@ -475,8 +455,7 @@ function doSearch() {
       if (groupCodeStr && String(g.gc).indexOf(groupCodeStr) === -1) continue
       if (hideSports && (g.g.indexOf('体育') !== -1 || g.n.indexOf('体育') !== -1)) continue
       if (hideCoop && (g.g.indexOf('中外合作') !== -1 || (g.remark && g.remark.indexOf('中外合作') !== -1))) continue
-      if (only2026 && !g.d) continue
-      if (selectedBatches.length && selectedBatches.indexOf(g.batch) === -1) continue
+            if (selectedBatches.length && selectedBatches.indexOf(g.batch) === -1) continue
 
       let needClone = false
       if (ms || mr) {
@@ -489,11 +468,7 @@ function doSearch() {
           const pass = (!ms || Number(g.b.s) >= ms) && (!mr || Number(g.b.r) <= mr)
           if (!pass) needClone = true; else anyPass = true
         }
-        // 仅2026招生模式下，2026年为计划招生数据可能无有效分数排名，不纳入筛选
-        if (g.d && !only2026) {
-          const pass = (!ms || Number(g.d.s) >= ms) && (!mr || Number(g.d.r) <= mr)
-          if (!pass) needClone = true; else anyPass = true
-        }
+        
         if (!anyPass) continue
       }
 
@@ -502,13 +477,12 @@ function doSearch() {
         if (ms) {
           if (c.a && Number(c.a.s) < ms) c.a = null
           if (c.b && Number(c.b.s) < ms) c.b = null
-          // 仅2026招生模式下保留2026数据行，不因分数排名过滤而清除
-          if (c.d && Number(c.d.s) < ms && !only2026) c.d = null
+          
         }
         if (mr) {
           if (c.a && Number(c.a.r) > mr) c.a = null
           if (c.b && Number(c.b.r) > mr) c.b = null
-          if (c.d && Number(c.d.r) > mr && !only2026) c.d = null
+          
         }
         c._diffs = computeDiffs(c, c._vr)
         results.push(c)
@@ -522,8 +496,8 @@ function doSearch() {
       const hasScoreB = !!(b.a || b.b)
       if (hasScoreA && !hasScoreB) return -1
       if (!hasScoreA && hasScoreB) return 1
-      const sa = Number((a.b || a.a || a.d || {}).s || 0)
-      const sb = Number((b.b || b.a || b.d || {}).s || 0)
+      const sa = Number((a.b || a.a || {}).s || 0)
+      const sb = Number((b.b || b.a || {}).s || 0)
       return (ms || mr) ? sa - sb : sb - sa
     })
 
@@ -537,7 +511,7 @@ function doSearch() {
     state.remarkExpanded = {}
   } else {
     // 单年份模式
-    const data = year === '2024' ? state.allData2024 : year === '2025' ? state.allData2025 : state.allData2026
+    const data = year === '2024' ? state.allData2024 : state.allData2025
     const result = []
     for (let i = 0, len = data.length; i < len; i++) {
       const r = data[i]
@@ -549,8 +523,7 @@ function doSearch() {
       if (nameStr && r[3].indexOf(nameStr) === -1) continue
       if (groupStr && r[5].indexOf(groupStr) === -1) continue
       if (groupCodeStr && String(r[11]).indexOf(groupCodeStr) === -1) continue
-      if (only2026 && r[0] !== '2026') continue
-      if (selectedBatches.length && selectedBatches.indexOf(r[9]) === -1) continue
+            if (selectedBatches.length && selectedBatches.indexOf(r[9]) === -1) continue
       if (hideSports && (r[5].indexOf('体育') !== -1 || r[3].indexOf('体育') !== -1)) continue
       if (hideCoop && (r[5].indexOf('中外合作') !== -1 || r[13].indexOf('中外合作') !== -1)) continue
       result.push(r)
@@ -679,9 +652,6 @@ function renderCardGrouped(item, idx, groupMajorMap) {
   }
   // 2026 row
   if (item.d) {
-    body.appendChild(make2026Row(
-      '<span class="card-value">专业代号 ' + escHtml(item.d.code) + '</span>' +
-      '<span class="card-value">计划录取' + item.d.e + '人</span>'))
     // 招生简章链接
     if (item.d.link) {
       body.appendChild(makeLinkRow(item.d.link))
@@ -786,20 +756,10 @@ function renderCardSingle(record, idx) {
   if (record[10]) body.appendChild(makeRow('性质', record[10]))
   if (record[5]) body.appendChild(makeRow('专业名称', record[5], 'full'))
   if (record[11]) body.appendChild(makeRow('专业组代码', record[11]))
-  // 2026年记录显示专业代号
-  if (record[0] === '2026' && record[15]) body.appendChild(makeRow('专业代号', record[15]))
 
-  if (record[0] !== '2026') {
-    body.appendChild(makeRow('最低分', String(record[6]), 'highlight'))
-    body.appendChild(makeRow('最低排名', String(record[7]), 'highlight'))
-    body.appendChild(makeRow('录取', record[8] + '人'))
-  } else {
-    body.appendChild(makeRow('计划录取', record[8] + '人', 'highlight'))
-    // 招生简章链接
-    if (record[16]) {
-      body.appendChild(makeLinkRow(record[16]))
-    }
-  }
+  body.appendChild(makeRow('最低分', String(record[6]), 'highlight'))
+  body.appendChild(makeRow('最低排名', String(record[7]), 'highlight'))
+  body.appendChild(makeRow('录取', record[8] + '人'))
   if (record[12]) body.appendChild(makeRow('收费标准', record[12] + '元/年'))
 
   if (record[13]) {
@@ -831,12 +791,7 @@ function makeYearRow(year, html) {
   return row
 }
 
-function make2026Row(html) {
-  const row = document.createElement('div')
-  row.className = 'card-row gp-year'
-  row.innerHTML = '<span class="gp-label">2026</span>' + html
-  return row
-}
+
 
 // Helper: link row (招生简章)
 function makeLinkRow(url) {
@@ -896,7 +851,7 @@ function renderDiffs(diffs) {
 // ============================================================
 
 function onYearChange(year) {
-  if (year === '2026') {
+  if (false) {
     state.minScore = ''
     state.maxRank = ''
     DOM.inputMinScore.value = ''
@@ -912,7 +867,7 @@ function splitByYear() {
   if (state.allData2024.length) return
   state.allData2024 = state.allData.filter(r => r[0] === '2024')
   state.allData2025 = state.allData.filter(r => r[0] === '2025')
-  state.allData2026 = state.allData.filter(r => r[0] === '2026')
+  
 }
 
 function toggleRemark(idx) {
@@ -920,11 +875,7 @@ function toggleRemark(idx) {
   renderMore()
 }
 
-function onToggleOnly2026() {
-  state.only2026 = !state.only2026
-  updateFilterUI()
-  doSearch()
-}
+
 
 function onToggleHideSports() {
   state.hideSports = !state.hideSports
@@ -1019,8 +970,7 @@ function doReset() {
   state.groupCode = ''
   state.minScore = ''
   state.maxRank = ''
-  state.only2026 = false
-  state.hideSports = false
+    state.hideSports = false
   state.hideCoop = false
   syncInputsFromState()
   updateFilterUI()
@@ -1241,14 +1191,14 @@ function updateFilterUI() {
   }
 
   // Toggle switches
-  updateToggleUI('toggle-only2026', state.only2026)
+  
   updateToggleUI('toggle-hide-sports', state.hideSports)
   updateToggleUI('toggle-hide-coop', state.hideCoop)
   updateToggleUI('toggle-adjust', state.assistantAdjust)
 
   // Score/rank row visibility: 仅在选择2026单年份时隐藏
   // 在「全部」模式中即使勾选「仅2026招生」也保持可见，因为分组数据仍有2024/2025的分数排名
-  DOM.scoreRow.style.display = state.year === '2026' ? 'none' : 'flex'
+  
 }
 
 function updateToggleUI(id, isOn) {
@@ -1343,8 +1293,8 @@ function getSchoolRanking(name) {
 const TUTORIAL = {
   merged: {
     steps: [
-      { title: '院校名称与代号', desc: '院校的全称及其在江西省高考招生的唯一代号。在「全部」模式中显示的院校代号为2026年的编号，其他年份若不同可在下方差异对比中查看。' },
-      { title: '「新」标签', desc: '标注有红色「新」字的专业组为2026年新增招生专业，暂无2024、2025年实际录取数据可供参考。选择此类专业时需结合其他信息综合评估录取难度。' },
+      { title: '院校名称与代号', desc: '院校的全称及其在江西省高考招生的唯一代号。' },
+      ,
       { title: '省市', desc: '院校所在的省份/直辖市，反映学校的地理位置和城市资源。' },
       { title: '批次', desc: '录取批次类型，如「本科」指普通本科批次、「提前本科」指提前批。不同批次录取时间、政策不同，需根据成绩定位选择合适的批次。' },
       { title: '选科要求', desc: '该专业对高考选考科目的要求，只有选科符合的考生才能报考。「不限选科」即所有考生均可报考。本示范要求「物理+化学」。' },
@@ -1353,7 +1303,7 @@ const TUTORIAL = {
       { title: '专业组代码', desc: '院校将招生专业按选科要求等条件划分为不同专业组。同一院校不同专业组的录取分数可能差异很大。' },
       { title: '2024年录取数据', desc: '2024年该专业录取的最低高考分数（600分）、最低全省排名（10000名）和实际录取人数（35人）。分数和排名越高录取难度越大，建议优先参考排名。' },
       { title: '2025年录取数据', desc: '2025年录取数据（580分，15000名，38人）。可与2024年对比观察分数和排名的涨跌趋势。' },
-      { title: '2026年计划数据', desc: '2026年该专业的计划招生名额（40人）。实际录取人数可能会有微调。2026年为志愿填报参考数据，非最终录取结果。' },
+      ,
       { title: '备注', desc: '该专业的特殊说明，包括外语要求、性别限制、身体条件、政治面貌要求等。点击可展开查看完整内容。' },
       { title: '年份差异对比', desc: '当同一院校+专业在不同年份间存在差异时，卡片底部会展示对比信息。例如专业组代码变动、收费标准调整等。' },
     ],
@@ -1372,15 +1322,13 @@ const TUTORIAL = {
           field: '专业组代码',
           entries: [
             { years: '2024年、2025年', value: 'G01' },
-            { years: '2026年', value: 'A01' },
-          ],
+                      ],
         },
         {
           field: '收费标准',
           entries: [
             { years: '2024年、2025年', value: '5250' },
-            { years: '2026年', value: '5800' },
-          ],
+                      ],
         },
       ],
     },
@@ -1408,31 +1356,10 @@ const TUTORIAL = {
       remark: '不招单色不能识别的考生。',
     },
   },
-  single2026: {
-    steps: [
-      { title: '院校名称与代号', desc: '院校的全称及其在江西省高考招生的唯一代号。2026年为志愿填报参考数据。' },
-      { title: '省市', desc: '院校所在的省份/直辖市。' },
-      { title: '批次', desc: '录取批次类型。2026年招生计划延续了之前的批次划分。' },
-      { title: '选科要求', desc: '该专业对高考选考科目的要求。本示范为「物理+生物」，需同时选考这两科方可报考。显示为「物理 生物」。' },
-      { title: '性质', desc: '招生计划的性质。2026年计划数据中的性质分类与往年一致。' },
-      { title: '专业名称', desc: '该专业组包含的专业名称。本示范为南昌大学「法学」专业。' },
-      { title: '专业组代码', desc: '该专业的组代码。2026年法学专业组代码为502。' },
-      { title: '专业代号', desc: '2026年新增的专业唯一代号（如A0、A1），用于精确标识该专业。' },
-      { title: '计划录取', desc: '2026年该专业的计划招生名额（7人）。实际录取人数可能会有微调。' },
-      { title: '收费标准', desc: '每学年的学费标准（4950元/年）。不同专业学费可能不同。' },
-      { title: '备注', desc: '该专业的特殊说明，可点击展开查看完整内容。' },
-    ],
-    demo: {
-      year: '2026', p: '江西', c: '8101', n: '南昌大学',
-      sr: '物理 生物', g: '法学', gc: '502', batch: '本科',
-      plan: '非定向',
-      planCount: 7, fee: '4950', majorCode: 'A0',
-      remark: '不招单色不能识别的考生。',
-    },
-  },
+
 }
 
-const MODE_CYCLE = ['merged', 'single2025', 'single2026']
+const MODE_CYCLE = ['merged', 'single2025']
 
 function openTutorial(fromHelp) {
   state.tutorialMode = 'merged'
@@ -1470,7 +1397,7 @@ function tutorialNext() {
     state.tutorialRemarkExpanded = isRemarkStep
     renderTutorial()
   } else {
-    if (state.tutorialMode === 'single2026') {
+    if (false) {
       finishTutorial()
     } else {
       const curIdx = MODE_CYCLE.indexOf(state.tutorialMode)
@@ -1545,7 +1472,7 @@ function renderTutorial() {
   }
   const isLast = stepIdx === steps.length - 1
   if (isLast) {
-    if (state.tutorialMode === 'single2026') {
+    if (false) {
       DOM.btnNext.textContent = '完成'
     } else {
       DOM.btnNext.textContent = '下一模式 →'
@@ -1569,7 +1496,7 @@ function renderTutorialCard(demo, mode, stepIdx) {
   } else if (mode === 'single2025') {
     return renderTutorialSingle2025(demo, stepIdx)
   } else {
-    return renderTutorialSingle2026(demo, stepIdx)
+    return null /* single2026 removed */
   }
 }
 
@@ -1590,7 +1517,7 @@ function renderTutorialMerged(d, stepIdx) {
       '<div class="card-row' + (stepIdx === 7 ? ' row-current' : '') + '" id="hl-7"><span class="card-label">专业组代码</span><span class="card-value">' + escHtml(d.gc) + '</span></div>' +
       (d.a ? '<div class="card-row row-highlight' + (stepIdx === 8 ? ' row-current' : '') + '" id="hl-8"><span class="gp-label">2024</span><span class="card-value highlight">' + d.a.s + '分</span><span class="card-value highlight">最低排名 ' + d.a.r + '</span><span class="card-value">录取' + d.a.e + '人</span></div>' : '') +
       (d.b ? '<div class="card-row row-highlight' + (stepIdx === 9 ? ' row-current' : '') + '" id="hl-9"><span class="gp-label">2025</span><span class="card-value highlight">' + d.b.s + '分</span><span class="card-value highlight">最低排名 ' + d.b.r + '</span><span class="card-value">录取' + d.b.e + '人</span></div>' : '') +
-      (d.d ? '<div class="card-row gp-year' + (stepIdx === 10 ? ' row-current' : '') + '" id="hl-10"><span class="gp-label">2026</span><span class="card-value">专业代号 ' + escHtml(d.d.code) + '</span><span class="card-value">计划录取' + d.d.e + '人</span></div>' : '') +
+      '' +
       (d.remark ? '<div class="card-row card-remark-header ' + (stepIdx === 11 ? ' row-current' : '') + '" id="hl-11" onclick="toggleDemoRemark()"><span class="card-label">备注</span><span class="card-remark-toggle">' + (state.tutorialRemarkExpanded ? '收起<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg>' : '展开▼') + '</span></div>' : '') +
       (state.tutorialRemarkExpanded && d.remark ? '<div class="card-row card-remark-body' + (stepIdx === 11 ? ' row-current' : '') + '"><span class="card-value full">' + escHtml(d.remark) + '</span></div>' : '') +
       (d._diffs ? '<div class="diff-section' + (stepIdx === 12 ? ' row-current' : '') + '" id="hl-12">' + renderTutorialDiffs(d._diffs) + '</div>' : '') +
@@ -1620,28 +1547,7 @@ function renderTutorialSingle2025(d, stepIdx) {
     '</div></div>'
 }
 
-function renderTutorialSingle2026(d, stepIdx) {
-  return '<div class="demo-card">' +
-    '<div class="card-header' + (stepIdx === 0 ? ' row-current' : '') + '" id="hl-0">' +
-      '<span class="card-year">' + escHtml(d.year) + '</span>' +
-      '<span class="card-name">' + escHtml(d.n) + '</span>' +
-      getSchoolTagHtml(d.n) +
-      '<span class="card-code">' + escHtml(d.c) + '</span>' +
-    '</div>' +
-    '<div class="card-body">' +
-      '<div class="card-row' + (stepIdx === 1 ? ' row-current' : '') + '" id="hl-1"><span class="card-label">省份</span><span class="card-value">' + escHtml(d.p) + '</span></div>' +
-      '<div class="card-row' + (stepIdx === 2 ? ' row-current' : '') + '" id="hl-2"><span class="card-label">批次</span><span class="card-value badge">' + escHtml(d.batch) + '</span></div>' +
-      '<div class="card-row' + (stepIdx === 3 ? ' row-current' : '') + '" id="hl-3"><span class="card-label">选科</span><span class="card-value tag">' + escHtml(d.sr) + '</span></div>' +
-      '<div class="card-row' + (stepIdx === 4 ? ' row-current' : '') + '" id="hl-4"><span class="card-label">性质</span><span class="card-value">' + escHtml(d.plan) + '</span></div>' +
-      '<div class="card-row' + (stepIdx === 5 ? ' row-current' : '') + '" id="hl-5"><span class="card-label">专业名称</span><span class="card-value full">' + escHtml(d.g) + '</span></div>' +
-      '<div class="card-row' + (stepIdx === 6 ? ' row-current' : '') + '" id="hl-6"><span class="card-label">专业组代码</span><span class="card-value">' + escHtml(d.gc) + '</span></div>' +
-      '<div class="card-row' + (stepIdx === 7 ? ' row-current' : '') + '" id="hl-7"><span class="card-label">专业代号</span><span class="card-value">' + escHtml(d.majorCode) + '</span></div>' +
-      '<div class="card-row' + (stepIdx === 8 ? ' row-current' : '') + '" id="hl-8"><span class="card-label">计划录取</span><span class="card-value highlight">' + d.planCount + '人</span></div>' +
-      '<div class="card-row' + (stepIdx === 9 ? ' row-current' : '') + '" id="hl-9"><span class="card-label">收费标准</span><span class="card-value">' + d.fee + '元/年</span></div>' +
-      (d.remark ? '<div class="card-row card-remark-header ' + (stepIdx === 10 ? ' row-current' : '') + '" id="hl-10" onclick="toggleDemoRemark()"><span class="card-label">备注</span><span class="card-remark-toggle">' + (state.tutorialRemarkExpanded ? '收起<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg>' : '展开▼') + '</span></div>' : '') +
-      (state.tutorialRemarkExpanded && d.remark ? '<div class="card-row card-remark-body' + (stepIdx === 10 ? ' row-current' : '') + '"><span class="card-value full">' + escHtml(d.remark) + '</span></div>' : '') +
-    '</div></div>'
-}
+
 
 function renderTutorialDiffs(diffs) {
   let html = ''
@@ -1920,14 +1826,9 @@ function _execAssistant(score, rank, srCode, regionProvinces, keyword) {
   for (let i = 0; i < data.length; i++) {
     const g = data[i]
 
-    // 仅推荐 2026 年有招生计划的专业组
-    if (!g.d) continue
-
-    // 非默认算法：仅推荐有对应历史数据的专业组，不出现"新"专业
-    if (algoVal !== 'default') {
-      const hasHist = algoVal === 'only2024' ? !!g.a : algoVal === 'only2025' ? !!g.b : (g.a || g.b)
-      if (!hasHist) continue
-    }
+    // 跳过无任何历史数据的专业组
+    if (algoVal === 'only2024' && !g.a) continue
+    if (algoVal === 'only2025' && !g.b) continue
 
     // Region filter
     if (regionProvinces && regionProvinces.indexOf(g.p) === -1) continue
@@ -2327,7 +2228,7 @@ function bindEvents() {
   DOM.btnConfirmBatch.addEventListener('click', confirmBatchPicker)
 
   // Toggle switches
-  document.getElementById('toggle-only2026').addEventListener('click', onToggleOnly2026)
+  
   document.getElementById('toggle-hide-sports').addEventListener('click', onToggleHideSports)
   document.getElementById('toggle-hide-coop').addEventListener('click', onToggleHideCoop)
   document.getElementById('toggle-adjust').addEventListener('click', onToggleAdjust)
