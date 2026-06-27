@@ -679,8 +679,6 @@ function renderCardGrouped(item, idx, groupMajorMap) {
   if (item.g) body.appendChild(makeRow('专业名称', item.g, 'full'))
   // Group code
   if (item.gc) body.appendChild(makeRow('专业组代码', item.gc))
-  // 收费标准
-  if (item.fee) body.appendChild(makeRow('收费标准', item.fee + '元/年'))
 
   // 2024 row
   if (item.a) {
@@ -696,14 +694,17 @@ function renderCardGrouped(item, idx, groupMajorMap) {
       '<span class="card-value highlight">最低排名 ' + item.b.r + '</span>' +
       '<span class="card-value">录取' + item.b.e + '人</span>'))
   }
-  // 2026 row
+  // 2026 row（含专业代号与计划录取）
   if (item.d) {
     body.appendChild(make2026Row(
       '<span class="card-value">专业代号 ' + escHtml(item.d.code) + '</span>' +
       '<span class="card-value">计划录取' + item.d.e + '人</span>'))
-    // 招生简章链接
-    if (item.d.link) {
-      body.appendChild(makeLinkRow(item.d.link))
+    // 收费标准 + 招生简章坐一桌
+    const parts2026 = []
+    if (item.fee) parts2026.push('收费标准 ' + item.fee + '元/年')
+    if (item.d.link) parts2026.push('<a class="card-link" href="' + escHtml(item.d.link) + '" target="_blank" rel="noopener noreferrer">招生简章 ↗</a>')
+    if (parts2026.length) {
+      body.appendChild(make2026SubRow(parts2026.join(' &nbsp;|&nbsp; ')))
     }
   }
 
@@ -854,6 +855,13 @@ function make2026Row(html) {
   const row = document.createElement('div')
   row.className = 'card-row gp-year'
   row.innerHTML = '<span class="gp-label">2026</span>' + html
+  return row
+}
+
+function make2026SubRow(html) {
+  const row = document.createElement('div')
+  row.className = 'card-row gp-year-sub'
+  row.innerHTML = '<span class="gp-label"></span>' + html
   return row
 }
 

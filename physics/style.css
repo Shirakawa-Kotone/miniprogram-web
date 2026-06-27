@@ -1030,6 +1030,12 @@ input[type="number"] {
   border-radius: 6px;
 }
 
+.gp-year-sub {
+  font-size: 0.85em;
+  margin: 0 -6px 4px;
+  padding: 2px 6px;
+}
+
 /* Remark collapse */
 .card-remark-header {
   margin-top: 4px;

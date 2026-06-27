@@ -651,8 +651,6 @@ function renderCardGrouped(item, idx, groupMajorMap) {
   if (item.g) body.appendChild(makeRow('专业名称', item.g, 'full'))
   // Group code
   if (item.gc) body.appendChild(makeRow('专业组代码', item.gc))
-  // 收费标准
-  if (item.fee) body.appendChild(makeRow('收费标准', item.fee + '元/年'))
 
   // 2024 row
   if (item.a) {
