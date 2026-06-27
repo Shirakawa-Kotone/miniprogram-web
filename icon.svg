@@ -14,12 +14,12 @@
     <!-- 帽顶装饰线 -->
     <line x1="-60" y1="-27" x2="60" y2="-27" stroke-width="12" opacity="0.6"/>
     <!-- 帽穗 -->
-    <line x1="180" y1="0" x2="220" y2="50" stroke-width="10"/>
+    <line x1="180" y1="0" x2="220" y2="60" stroke-width="10"/>
     <circle cx="220" cy="60" r="10" fill="#fff" stroke="none"/>
     <!-- 书本底座 -->
     <path d="M-140,60 L-140,120 Q0,140 140,120 L140,60" stroke-width="16"/>
     <line x1="-140" y1="90" x2="140" y2="90" stroke-width="10" opacity="0.5"/>
   </g>
   <!-- 年份文字 -->
-  <text x="256" y="380" text-anchor="middle" fill="#fff" font-family="system-ui,sans-serif" font-size="48" font-weight="700" opacity="0.9">2024–2026</text>
+  <text x="256" y="400" text-anchor="middle" fill="#fff" font-family="system-ui,sans-serif" font-size="48" font-weight="700" opacity="0.9">2024–2026</text>
 </svg>
