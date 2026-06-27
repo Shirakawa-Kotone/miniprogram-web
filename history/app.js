@@ -405,8 +405,8 @@ function computeDiffs(g, vr) {
 function doSearch() {
   if (!state.loaded) return
 
-  // 若处于志愿推荐模式，退出并执行常规搜索
-  if (DOM.assistantResults.style.display !== 'none') {
+  // 若处于志愿推荐模式：仅当不是通过「志愿推荐」按钮主动进入时，退出推荐模式
+  if (!_mobileAssistantActive && DOM.assistantResults.style.display !== 'none') {
     exitAssistant()
   }
 
@@ -2487,20 +2487,18 @@ function bindEvents() {
   DOM.asRank.addEventListener('keydown', function (e) {
     if (e.key === 'Enter') startAssistant()
   })
-  // 用户修改排名时清除自动换算高亮 + 隐藏推荐结果
+  // 用户修改排名时清除自动换算高亮（不触发任何计算，等待点击「开始推荐」）
   DOM.asRank.addEventListener('input', function () {
     this.classList.remove('as-rank-auto')
     DOM.asRankHint.style.display = 'none'
-    if (DOM.assistantResults.style.display !== 'none') exitAssistant()
   })
-  // 用户修改分数时清除已自动换算的排名 + 隐藏推荐结果
+  // 用户修改分数时清除已自动换算的排名（不触发任何计算，等待点击「开始推荐」）
   DOM.asScore.addEventListener('input', function () {
     if (DOM.asRank.classList.contains('as-rank-auto')) {
       DOM.asRank.value = ''
       DOM.asRank.classList.remove('as-rank-auto')
       DOM.asRankHint.style.display = 'none'
     }
-    if (DOM.assistantResults.style.display !== 'none') exitAssistant()
   })
 
   // Assistant section collapse toggle
