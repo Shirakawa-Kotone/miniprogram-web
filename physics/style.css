@@ -1383,17 +1383,21 @@ input[type="number"] {
   transition: opacity .3s ease;
 }
 
-/* Demo assistant panel dimming */
-.demo-card .assistant-section {
+/* Demo assistant panel dimming — dim 顶层容器，内层元素随父级 opacity 变暗/变亮 */
+.demo-card .assistant-section .as-toggle-row,
+.demo-card .assistant-section .as-row,
+.demo-card .assistant-section .as-action {
   opacity: 0.2;
   transition: opacity .3s ease;
 }
-.demo-card .as-results-panel {
+.demo-card .as-results-panel .as-header-simple,
+.demo-card .as-results-panel .as-col,
+.demo-card .as-results-panel .as-col-card {
   opacity: 0.2;
   transition: opacity .3s ease;
 }
 .demo-card .row-current {
-  opacity: 1;
+  opacity: 1 !important;
 }
 
 /* Step panel - bottom sheet */
