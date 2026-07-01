@@ -702,6 +702,17 @@ function renderCardGrouped(item, idx, groupMajorMap, userScore, userRank, algoVa
   const card = document.createElement('div')
   card.className = 'card'
   card.dataset.idx = idx
+  card.addEventListener('dblclick', function () {
+    exitAssistant()
+    state.code = item.c || ''
+    state.name = item.n || ''
+    state.groupCode = item.gc || ''
+    state.groupName = ''
+    state.minScore = ''
+    state.maxRank = ''
+    syncInputsFromState()
+    doSearch()
+  })
 
   // Header
   const header = document.createElement('div')
@@ -871,6 +882,17 @@ function renderCardSingle(record, idx) {
   const card = document.createElement('div')
   card.className = 'card'
   card.dataset.idx = idx
+  card.addEventListener('dblclick', function () {
+    exitAssistant()
+    state.code = String(record[2] || '').padStart(4, '0')
+    state.name = record[3] || ''
+    state.groupCode = record[11] || ''
+    state.groupName = ''
+    state.minScore = ''
+    state.maxRank = ''
+    syncInputsFromState()
+    doSearch()
+  })
 
   const header = document.createElement('div')
   header.className = 'card-header'
@@ -2435,6 +2457,17 @@ function renderWideCards(container, items, userScore, userRank, algoVal) {
 function renderCardWide(entry, userScore, userRank, gmi, algoVal) {
   const card = document.createElement('div')
   card.className = 'as-wide-card'
+  card.addEventListener('dblclick', function () {
+    exitAssistant()
+    state.code = (entry.c || '')
+    state.name = entry.n || ''
+    state.groupCode = entry.gc || ''
+    state.groupName = ''
+    state.minScore = ''
+    state.maxRank = ''
+    syncInputsFromState()
+    doSearch()
+  })
 
   // ── 顶部行：校名 + 代号 + 标签 + 专业组编号 + 链接 ──
   const row1 = document.createElement('div')
