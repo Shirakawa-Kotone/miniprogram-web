@@ -2129,12 +2129,7 @@ input[type="number"] {
 
 .as-wide-tr-matched {
   background: var(--primary-light);
-  margin: 0 -12px;
-  padding: 4px 12px;
   border-bottom-color: transparent;
-}
-.as-wide-tr-matched + .as-wide-tr {
-  border-top: 1px solid var(--border-light);
 }
 .as-wide-tr-top6 {
   background: var(--primary-light);
