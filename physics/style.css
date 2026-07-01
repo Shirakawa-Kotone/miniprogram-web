@@ -2041,7 +2041,7 @@ input[type="number"] {
   background: var(--card-bg);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  overflow: hidden;
+  overflow: visible;
   box-shadow: var(--shadow);
 }
 .as-wide-card { border-left: 4px solid var(--primary); }

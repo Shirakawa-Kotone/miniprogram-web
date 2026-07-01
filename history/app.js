@@ -801,7 +801,7 @@ function makeOtherMajorsBody(others, userScore, userRank, algoVal) {
         tierHtml = ' <span class="adjust-major-tier as-major-tier-' + majorTier + '">' + majorTier + '</span>'
       }
     }
-    item.innerHTML = '· <span class="major-name">' + escHtml(m.n) + '</span>' + tierHtml +
+    item.innerHTML = '· ' + tierHtml + '<span class="major-name">' + escHtml(m.n) + '</span>' +
       (m.code ? ' <span class="major-detail">(代号' + escHtml(m.code) + ')</span>' : '') +
       (m.planCount ? ' <span class="major-detail">计划' + m.planCount + '人</span>' : '')
     listInner.appendChild(item)
@@ -2432,7 +2432,7 @@ function renderCardWide(entry, userScore, userRank, gmi, algoVal) {
     }
     row.innerHTML =
       '<span class="as-wide-td as-wide-td-num">' + (mi + 1) + '</span>' +
-      '<span class="as-wide-td as-wide-td-name">' + escHtml(m.g) + majorTierHtml + '</span>' +
+      '<span class="as-wide-td as-wide-td-name">' + majorTierHtml + escHtml(m.g) + '</span>' +
       '<span class="as-wide-td as-wide-td-code">' + escHtml(m.code || '—') + '</span>' +
       '<span class="as-wide-td as-wide-td-fee">' + feeStr + '</span>' +
       '<span class="as-wide-td as-wide-td-2024">' + y2024 + '</span>' +
