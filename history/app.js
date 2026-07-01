@@ -2474,9 +2474,11 @@ function renderCardWide(entry, userScore, userRank, gmi, algoVal) {
       var _mt = calculateMajorTier(userScore, userRank, m, algoVal)
       if (_mt) majorTierHtml = ' <span class="as-wide-tier-badge as-major-tier-' + _mt + '">' + _mt + '</span>'
     }
+    // 新增专业标记（无历史数据）
+    var newTagHtml = (m.d && !m.a && !m.b) ? '<span class="as-wide-tag-new">新</span>' : ''
     row.innerHTML =
       '<span class="as-wide-td as-wide-td-num">' + (mi + 1) + '</span>' +
-      '<span class="as-wide-td as-wide-td-name">' + majorTierHtml + escHtml(m.g) + '</span>' +
+      '<span class="as-wide-td as-wide-td-name">' + majorTierHtml + newTagHtml + escHtml(m.g) + '</span>' +
       '<span class="as-wide-td as-wide-td-code">' + escHtml(m.code || '—') + '</span>' +
       '<span class="as-wide-td as-wide-td-fee">' + feeStr + '</span>' +
       '<span class="as-wide-td as-wide-td-2024">' + y2024 + '</span>' +

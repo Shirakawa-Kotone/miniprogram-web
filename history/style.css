@@ -2178,6 +2178,20 @@ input[type="number"] {
 .as-major-tier-稳 { background: #00897B; }
 .as-major-tier-保 { background: #757575; }
 
+/* 宽卡片新增专业标记 */
+.as-wide-tag-new {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: bold;
+  color: #fff;
+  background: var(--red);
+  padding: 0 4px;
+  border-radius: 2px;
+  line-height: 15px;
+  margin-right: 3px;
+  vertical-align: middle;
+}
+
 .as-wide-td-code {
   width: 36px;
   text-align: center;
