@@ -2023,10 +2023,10 @@ input[type="number"] {
   flex: 1;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding: 10px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 14px;
 }
 
 .as-wide-card {
@@ -2044,11 +2044,11 @@ input[type="number"] {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 12px;
+  padding: 12px 14px;
   background: var(--bg);
   border-bottom: 1px solid var(--border-light);
   flex-wrap: wrap;
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .as-wide-badge {
@@ -2121,15 +2121,15 @@ input[type="number"] {
 .as-wide-table {
   display: flex;
   flex-direction: column;
-  padding: 4px 12px;
-  font-size: 11px;
+  padding: 8px 14px;
+  font-size: 12px;
 }
 
 .as-wide-tr {
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 4px 0;
+  padding: 6px 0;
   border-bottom: 1px solid var(--border-light);
 }
 .as-wide-tr:last-child {
@@ -2189,10 +2189,10 @@ input[type="number"] {
 
 .as-wide-td-2024,
 .as-wide-td-2025 {
-  width: 80px;
+  width: 85px;
   text-align: right;
   font-family: monospace;
-  font-size: 10px;
+  font-size: 11px;
 }
 
 .as-wide-td-plan {
@@ -2205,9 +2205,9 @@ input[type="number"] {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 5px 12px;
+  padding: 8px 14px;
   border-top: 1px solid var(--border-light);
-  font-size: 11px;
+  font-size: 12px;
   color: var(--text-muted);
   flex-wrap: wrap;
 }
