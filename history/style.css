@@ -888,6 +888,19 @@ input[type="number"] {
   border: 1px solid #E0E0E0;
 }
 
+.as-column-header-all {
+  background: var(--primary-light);
+  color: var(--primary-dark);
+  border: 1px solid var(--primary);
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+  text-align: center;
+  font-weight: bold;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
 .as-column-body {
   flex: 1;
   overflow-y: auto;
@@ -1103,6 +1116,16 @@ input[type="number"] {
 .adjust-major-item .major-detail {
   color: var(--text-muted);
   font-size: 11px;
+}
+.adjust-major-tier {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: bold;
+  color: #fff;
+  padding: 0 5px;
+  border-radius: 3px;
+  line-height: 16px;
+  margin: 0 2px;
 }
 
 /* Year diff section */
@@ -1986,39 +2009,6 @@ input[type="number"] {
   border-color: var(--border);
 }
 
-.as-wide-tier-bar {
-  display: flex;
-  gap: 4px;
-  padding: 4px 10px 8px;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-.as-wide-tier-tab {
-  flex-shrink: 0;
-  padding: 4px 12px;
-  font-size: 12px;
-  border-radius: 4px;
-  cursor: pointer;
-  color: var(--text-muted);
-  border: 1px solid var(--border);
-  user-select: none;
-  transition: all 0.15s ease;
-}
-.as-wide-tier-tab:hover {
-  color: var(--text);
-  background: var(--bg);
-}
-.as-wide-tier-tab.active {
-  font-weight: bold;
-  color: #fff;
-  border-color: transparent;
-}
-
-.as-wide-tier-tab:first-child.active { background: #1565C0; }
-.as-wide-tier-tab:nth-child(2).active { background: #00897B; }
-.as-wide-tier-tab:nth-child(3).active { background: #757575; }
-
 .as-wide-body {
   flex: 1;
   overflow-y: auto;
@@ -2036,9 +2026,7 @@ input[type="number"] {
   overflow: hidden;
   box-shadow: var(--shadow);
 }
-.as-wide-card-冲 { border-left: 4px solid #1565C0; }
-.as-wide-card-稳 { border-left: 4px solid #00897B; }
-.as-wide-card-保 { border-left: 4px solid #757575; }
+.as-wide-card { border-left: 4px solid var(--primary); }
 
 .as-wide-row1 {
   display: flex;
@@ -2050,22 +2038,6 @@ input[type="number"] {
   flex-wrap: wrap;
   font-size: 13px;
 }
-
-.as-wide-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  font-size: 12px;
-  font-weight: bold;
-  color: #fff;
-  flex-shrink: 0;
-}
-.as-wide-badge-冲 { background: #1565C0; }
-.as-wide-badge-稳 { background: #00897B; }
-.as-wide-badge-保 { background: #757575; }
 
 .as-wide-sname {
   font-weight: bold;
@@ -2173,7 +2145,25 @@ input[type="number"] {
   flex: 1;
   min-width: 60px;
   font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
+
+/* 专业级冲稳保标签（横屏卡片表格内） */
+.as-wide-tier-badge {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: bold;
+  color: #fff;
+  padding: 0 5px;
+  border-radius: 3px;
+  line-height: 16px;
+  flex-shrink: 0;
+}
+.as-major-tier-冲 { background: #1565C0; }
+.as-major-tier-稳 { background: #00897B; }
+.as-major-tier-保 { background: #757575; }
 
 .as-wide-td-code {
   width: 36px;
@@ -2234,4 +2224,3 @@ input[type="number"] {
 .dark-mode .as-wide-batch-bar { background: #1e1e1e; }
 .dark-mode .as-wide-bar { background: #1e1e1e; border-bottom-color: #333; }
 .dark-mode .as-wide-batch-tab.active { background: #252525; border-color: #333; }
-.dark-mode .as-wide-tier-tab { border-color: #333; }

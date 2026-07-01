@@ -7,6 +7,9 @@
 <script>
 // 深色模式首屏同步（与主站一致，避免闪烁）
 (function(){try{var d=localStorage.getItem('dark_mode');if(d===null)d=window.matchMedia('(prefers-color-scheme:dark)').matches;else d=d==='true';if(d)document.documentElement.classList.add('dark-mode')}catch(e){}})();
+// portrait=1 参数：禁止横屏旋转提示（小程序 webview 使用）
+var noRotate = new URLSearchParams(location.search).get('portrait') === '1'
+if (noRotate) document.documentElement.classList.add('no-rotate')
 </script>
 <script src="lib/echarts.min.js"></script>
 <style>
@@ -41,6 +44,8 @@ body { background: var(--bg); display: flex; flex-direction: column; font-family
 #rotate-overlay .rotate-hint { font-size: 15px; color: rgba(255,255,255,0.6); line-height: 1.5; }
 @keyframes rotate-phone { 0%,100% { transform: rotate(0deg); } 50% { transform: rotate(90deg); } }
 @media (orientation: portrait) and (max-width: 768px) { #rotate-overlay { display: flex; } body { overflow: hidden; } }
+.no-rotate #rotate-overlay { display: none !important; }
+.no-rotate body { overflow: auto !important; }
 </style>
 </head>
 <body>

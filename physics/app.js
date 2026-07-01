@@ -698,7 +698,7 @@ function renderMore() {
   DOM.emptyMsg.style.display = state.totalCount === 0 ? 'block' : 'none'
 }
 
-function renderCardGrouped(item, idx, groupMajorMap) {
+function renderCardGrouped(item, idx, groupMajorMap, userScore, userRank, algoVal, majorIndex) {
   const card = document.createElement('div')
   card.className = 'card'
   card.dataset.idx = idx
@@ -783,7 +783,8 @@ function renderCardGrouped(item, idx, groupMajorMap) {
         const _isOpen = state.assistantAdjustExpanded[cardKey] !== false
         body.appendChild(makeOtherMajorsHeader(cardKey, others, _isOpen))
         if (_isOpen) {
-          body.appendChild(makeOtherMajorsBody(others))
+          const md = majorIndex ? majorIndex.get(mapKey) : null
+          body.appendChild(makeOtherMajorsBody(others, userScore, userRank, algoVal, md))
         }
       }
     }
@@ -806,7 +807,7 @@ function makeOtherMajorsHeader(mapKey, others, isOpen) {
   return wrapper
 }
 
-function makeOtherMajorsBody(others) {
+function makeOtherMajorsBody(others, userScore, userRank, algoVal, majorIndexData) {
   const list = document.createElement('div')
   list.className = 'card-row card-remark-body'
   const listInner = document.createElement('div')
@@ -814,7 +815,18 @@ function makeOtherMajorsBody(others) {
   for (const m of others) {
     const item = document.createElement('span')
     item.className = 'adjust-major-item'
-    item.innerHTML = '· <span class="major-name">' + escHtml(m.n) + '</span>' +
+    // 计算专业级冲稳保
+    var tierHtml = ''
+    if (userScore && userRank && algoVal && majorIndexData) {
+      var fullMajor = majorIndexData.find(function (fm) { return fm.g === m.n })
+      if (fullMajor) {
+        var majorTier = calculateMajorTier(userScore, userRank, fullMajor, algoVal)
+        if (majorTier) {
+          tierHtml = ' <span class="adjust-major-tier as-major-tier-' + majorTier + '">' + majorTier + '</span>'
+        }
+      }
+    }
+    item.innerHTML = '· <span class="major-name">' + escHtml(m.n) + '</span>' + tierHtml +
       (m.code ? ' <span class="major-detail">(代号' + escHtml(m.code) + ')</span>' : '') +
       (m.planCount ? ' <span class="major-detail">计划' + m.planCount + '人</span>' : '')
     listInner.appendChild(item)
@@ -2142,6 +2154,17 @@ function startAssistant() {
   }, 0)
 }
 
+/**
+ * 计算专业级冲稳保（基于专业自身的录取数据）
+ */
+function calculateMajorTier(userScore, userRank, major, algorithm) {
+  return calculateTier(userScore, userRank, {
+    a: major.a || null,
+    b: major.b || null,
+    d: major.d || null,
+  }, algorithm)
+}
+
 function _execAssistant(score, rank, srCode, regionProvinces, keyword) {
   // 按批次分组的结果：{ batchName: { '冲': [], '稳': [], '保': [] } }
   const results = {}
@@ -2188,29 +2211,24 @@ function _execAssistant(score, rank, srCode, regionProvinces, keyword) {
     // 仅推选 985/211
     if (state.assistantOnly985211 && !getSchoolTag(g.n)) continue
 
-    // Calculate tier
+    // 计算冲稳保（作为相关性过滤，不用于分组）
     const tier = calculateTier(score, rank, g, algoVal)
     if (!tier) continue
     // 分数熔断：最高分<考生分-20 或 最低分>考生分+20 时排除
     if (score && !checkScoreFuse(score, g)) continue
     const batch = g.batch || '未分类'
-    if (!results[batch]) results[batch] = { '冲': [], '稳': [], '保': [] }
-    // 每档每批次上限 30 组
-    if (results[batch][tier].length >= 30) continue
+    if (!results[batch]) results[batch] = []
+    // 每批次上限 30 组
+    if (results[batch].length >= 30) continue
 
-    results[batch][tier].push(g)
+    results[batch].push(g)
   }
 
-  // Sort within each tier in each batch（保：从高到低，冲/稳：从低到高）
+  // 每批次按参考分数从高到低排序
   for (const batch of Object.keys(results)) {
-    for (const t of ['冲', '稳', '保']) {
-      const order = t === '保' ? -1 : 1
-      results[batch][t].sort(function (a, b) {
-        const sa = getRefScore(b, algoVal)
-        const sb = getRefScore(a, algoVal)
-        return order * (sb - sa)
-      })
-    }
+    results[batch].sort(function (a, b) {
+      return getRefScore(b, algoVal) - getRefScore(a, algoVal)
+    })
   }
 
   try {
@@ -2224,21 +2242,9 @@ function _execAssistant(score, rank, srCode, regionProvinces, keyword) {
 }
 
 function renderAssistantResults(results, userScore, userRank) {
-  // 判断结果格式：batch 格式（新）还是 flat 格式（旧兼容）
-  const isBatchFormat = !results['冲'] && !results['稳'] && !results['保']
-  if (isBatchFormat) {
-    // 横屏≥1200px 用新布局，否则压平为旧格式
-    if (window.innerWidth >= 1200) {
-      renderAssistantResultsWide(results, userScore, userRank)
-    } else {
-      const flat = { '冲': [], '稳': [], '保': [] }
-      for (const b of Object.keys(results)) {
-        for (const t of ['冲', '稳', '保']) {
-          flat[t] = flat[t].concat(results[b][t])
-        }
-      }
-      renderAssistantResultsLegacy(flat, userScore, userRank)
-    }
+  // results 始终为 { batchName: [items] } 格式
+  if (window.innerWidth >= 1200) {
+    renderAssistantResultsWide(results, userScore, userRank)
   } else {
     renderAssistantResultsLegacy(results, userScore, userRank)
   }
@@ -2247,13 +2253,26 @@ function renderAssistantResults(results, userScore, userRank) {
 function renderAssistantResultsLegacy(results, userScore, userRank) {
   const container = DOM.asColumns
   container.classList.remove('as-wide')
-  const tiers = ['冲', '稳', '保']
-  const labels = { '冲': '冲', '稳': '稳', '保': '保' }
-  const classes = { '冲': 'reach', '稳': 'safe', '保': 'fallback' }
 
-  const total = tiers.reduce((s, t) => s + results[t].length, 0)
+  // 按批次排序展平：本科排最前，其余按字母序
+  const batchNames = Object.keys(results).filter(function (b) {
+    return results[b].length > 0
+  })
+  batchNames.sort(function (a, b) {
+    if (a === '本科') return -1
+    if (b === '本科') return 1
+    return a.localeCompare(b, 'zh')
+  })
 
-  if (total === 0) {
+  const flatItems = []
+  for (const b of batchNames) {
+    for (const item of results[b]) {
+      item._asBatch = b
+      flatItems.push(item)
+    }
+  }
+
+  if (flatItems.length === 0) {
     container.innerHTML = '<div class="as-empty">未找到匹配的院校和专业，请调整输入条件后重试</div>'
     return
   }
@@ -2262,82 +2281,41 @@ function renderAssistantResultsLegacy(results, userScore, userRank) {
   const oldRemarkExpanded = state.remarkExpanded
   state.remarkExpanded = {}
 
-  // Build tab bar
-  const tabBar = document.createElement('div')
-  tabBar.className = 'as-tab-bar'
-  tabBar.id = 'as-tab-bar'
-  for (const t of tiers) {
-    const count = results[t].length
-    const tab = document.createElement('span')
-    tab.className = 'as-tab ' + classes[t] + (t === '冲' ? ' active' : '')
-    tab.dataset.tier = t
-    tab.textContent = labels[t] + ' (' + count + ')'
-    tabBar.appendChild(tab)
-  }
-  container.appendChild(tabBar)
+  // 构建同专业组索引（含完整录取数据，用于专业级冲稳保计算）
+  const majorIndex = buildGroupMajorIndex()
+  const algoVal = ALGO_LIST[state.assistantAlgoIdx].value
 
-  // Build columns — 使用 DocumentFragment 批量追加，减少回流
-  const adjustMap = buildGroupMajorMap()
+  // 单列展示
+  const col = document.createElement('div')
+  col.className = 'as-column active'
+  col.style.width = '100%'
 
-  for (const t of tiers) {
-    const items = results[t]
-    const isActive = t === '冲'
+  const header = document.createElement('div')
+  header.className = 'as-column-header as-column-header-all'
+  header.innerHTML = '全部 <span style="font-weight:normal;font-size:12px">' + flatItems.length + '个专业组</span>'
+  col.appendChild(header)
 
-    const col = document.createElement('div')
-    col.className = 'as-column' + (isActive ? ' active' : '')
-    col.dataset.tier = t
-
-    const header = document.createElement('div')
-    header.className = 'as-column-header ' + classes[t]
-    header.innerHTML = labels[t] + ' <span style="font-weight:normal;font-size:12px">' + items.length + '个专业组</span>'
-    col.appendChild(header)
-
-    const body = document.createElement('div')
-    body.className = 'as-column-body'
-    body.addEventListener('scroll', function () {
-      if (_mobileAssistantActive) {
-        DOM.floatBtn.style.display = this.scrollTop > 300 ? 'flex' : 'none'
-      }
-    })
-
-    if (items.length) {
-      const frag = document.createDocumentFragment()
-      for (let i = 0; i < items.length; i++) {
-        frag.appendChild(renderCardGrouped(items[i], 'as-' + t + '-' + i, adjustMap))
-      }
-      body.appendChild(frag)
-    } else {
-      const empty = document.createElement('div')
-      empty.className = 'as-empty'
-      empty.style.padding = '20px 0'
-      empty.textContent = '该档暂无推荐'
-      body.appendChild(empty)
+  const body = document.createElement('div')
+  body.className = 'as-column-body'
+  body.addEventListener('scroll', function () {
+    if (_mobileAssistantActive) {
+      DOM.floatBtn.style.display = this.scrollTop > 300 ? 'flex' : 'none'
     }
+  })
 
-    col.appendChild(body)
-    container.appendChild(col)
+  const frag = document.createDocumentFragment()
+  const adjustMap = buildGroupMajorMap()
+  for (let i = 0; i < flatItems.length; i++) {
+    frag.appendChild(renderCardGrouped(flatItems[i], 'as-' + i,
+      adjustMap, userScore, userRank, algoVal, majorIndex))
   }
+  body.appendChild(frag)
+
+  col.appendChild(body)
+  container.appendChild(col)
 
   state.remarkExpanded = oldRemarkExpanded
   updateAssistantLayout()
-
-  // Bind tab switching
-  const tabs = container.querySelectorAll('.as-tab')
-  tabs.forEach(function (tab) {
-    tab.addEventListener('click', function () {
-      const tier = this.dataset.tier
-      container.querySelectorAll('.as-tab').forEach(function (t) { t.classList.remove('active') })
-      this.classList.add('active')
-      container.querySelectorAll('.as-column').forEach(function (c) {
-        c.classList.toggle('active', c.dataset.tier === tier)
-      })
-      // 切换列时检查新列的滚动位置
-      const activeBody = container.querySelector('.as-column.active .as-column-body')
-      if (activeBody) {
-        DOM.floatBtn.style.display = activeBody.scrollTop > 300 ? 'flex' : 'none'
-      }
-    })
-  })
 }
 
 // ============================================================
@@ -2347,7 +2325,7 @@ function renderAssistantResultsLegacy(results, userScore, userRank) {
 function renderAssistantResultsWide(results, userScore, userRank) {
   const container = DOM.asColumns
   const batchNames = Object.keys(results).filter(function (b) {
-    return results[b]['冲'].length + results[b]['稳'].length + results[b]['保'].length > 0
+    return results[b].length > 0
   })
   if (batchNames.length === 0) {
     container.innerHTML = '<div class="as-empty">未找到匹配的院校和专业，请调整输入条件后重试</div>'
@@ -2360,11 +2338,11 @@ function renderAssistantResultsWide(results, userScore, userRank) {
     return a.localeCompare(b, 'zh')
   })
 
-  // 构建同专业组索引
+  // 构建同专业组索引（含完整录取数据，用于专业级冲稳保计算）
   buildGroupMajorIndex()
+  const algoVal = ALGO_LIST[state.assistantAlgoIdx].value
 
   let activeBatch = batchNames[0]
-  let activeTier = '冲'
 
   container.innerHTML = ''
   container.classList.add('as-wide')
@@ -2373,7 +2351,7 @@ function renderAssistantResultsWide(results, userScore, userRank) {
   const wrap = document.createElement('div')
   wrap.className = 'as-wide-wrap'
 
-  // ── 顶部栏：批次标签 + 冲稳保标签 ──
+  // ── 顶部栏：批次标签 ──
   const bar = document.createElement('div')
   bar.className = 'as-wide-bar'
 
@@ -2381,7 +2359,7 @@ function renderAssistantResultsWide(results, userScore, userRank) {
   batchBar.className = 'as-wide-batch-bar'
   for (let bi = 0; bi < batchNames.length; bi++) {
     const bName = batchNames[bi]
-    const total = results[bName]['冲'].length + results[bName]['稳'].length + results[bName]['保'].length
+    const total = results[bName].length
     const tab = document.createElement('span')
     tab.className = 'as-wide-batch-tab' + (bName === activeBatch ? ' active' : '')
     tab.dataset.batch = bName
@@ -2389,25 +2367,12 @@ function renderAssistantResultsWide(results, userScore, userRank) {
     batchBar.appendChild(tab)
   }
   bar.appendChild(batchBar)
-
-  const tierBar = document.createElement('div')
-  tierBar.className = 'as-wide-tier-bar'
-  const tierLabels = { '冲': '冲', '稳': '稳', '保': '保' }
-  for (const t of ['冲', '稳', '保']) {
-    const count = results[activeBatch][t].length
-    const tab = document.createElement('span')
-    tab.className = 'as-wide-tier-tab' + (t === activeTier ? ' active' : '')
-    tab.dataset.tier = t
-    tab.textContent = tierLabels[t] + ' (' + count + ')'
-    tierBar.appendChild(tab)
-  }
-  bar.appendChild(tierBar)
   wrap.appendChild(bar)
 
   // ── 卡片区域 ──
   const body = document.createElement('div')
   body.className = 'as-wide-body'
-  renderWideCards(body, results, activeBatch, activeTier, userScore, userRank)
+  renderWideCards(body, results[activeBatch] || [], userScore, userRank, algoVal)
   wrap.appendChild(body)
 
   container.appendChild(wrap)
@@ -2421,38 +2386,15 @@ function renderAssistantResultsWide(results, userScore, userRank) {
     activeBatch = bName
     batchBar.querySelectorAll('.as-wide-batch-tab').forEach(function (t) { t.classList.remove('active') })
     tab.classList.add('active')
-    // 更新冲稳保计数
-    tierBar.innerHTML = ''
-    for (const t of ['冲', '稳', '保']) {
-      const count = results[activeBatch][t].length
-      const tb = document.createElement('span')
-      tb.className = 'as-wide-tier-tab' + (t === activeTier ? ' active' : '')
-      tb.dataset.tier = t
-      tb.textContent = tierLabels[t] + ' (' + count + ')'
-      tierBar.appendChild(tb)
-    }
-    renderWideCards(body, results, activeBatch, activeTier, userScore, userRank)
-  })
-
-  // ── 绑定冲稳保标签切换 ──
-  tierBar.addEventListener('click', function (e) {
-    const tab = e.target.closest('.as-wide-tier-tab')
-    if (!tab) return
-    const t = tab.dataset.tier
-    if (t === activeTier) return
-    activeTier = t
-    tierBar.querySelectorAll('.as-wide-tier-tab').forEach(function (tb) { tb.classList.remove('active') })
-    tab.classList.add('active')
-    renderWideCards(body, results, activeBatch, activeTier, userScore, userRank)
+    renderWideCards(body, results[activeBatch] || [], userScore, userRank, algoVal)
   })
 }
 
-function renderWideCards(container, results, batch, tier, userScore, userRank) {
-  const items = results[batch] ? results[batch][tier] : []
+function renderWideCards(container, items, userScore, userRank, algoVal) {
   container.innerHTML = ''
 
   if (!items.length) {
-    container.innerHTML = '<div class="as-empty">该档暂无推荐</div>'
+    container.innerHTML = '<div class="as-empty">暂无推荐</div>'
     return
   }
 
@@ -2461,26 +2403,20 @@ function renderWideCards(container, results, batch, tier, userScore, userRank) {
 
   for (let i = 0; i < items.length; i++) {
     const entry = items[i]
-    const card = renderCardWide(entry, tier, userScore, userRank, gmi)
+    const card = renderCardWide(entry, userScore, userRank, gmi, algoVal)
     frag.appendChild(card)
   }
 
   container.appendChild(frag)
 }
 
-function renderCardWide(entry, tier, userScore, userRank, gmi) {
+function renderCardWide(entry, userScore, userRank, gmi, algoVal) {
   const card = document.createElement('div')
-  card.className = 'as-wide-card as-wide-card-' + tier
+  card.className = 'as-wide-card'
 
   // ── 顶部行：校名 + 代号 + 标签 + 专业组编号 + 链接 ──
   const row1 = document.createElement('div')
   row1.className = 'as-wide-row1'
-
-  // 冲稳保标签
-  const badge = document.createElement('span')
-  badge.className = 'as-wide-badge as-wide-badge-' + tier
-  badge.textContent = tier
-  row1.appendChild(badge)
 
   // 学校名称
   const sname = document.createElement('span')
@@ -2590,9 +2526,15 @@ function renderCardWide(entry, tier, userScore, userRank, gmi) {
     var planStr = m.planCount ? m.planCount + '人' : '—'
     var feeStr = m.fee ? m.fee + '元' : '—'
 
+    // 计算专业级冲稳保
+    var majorTierHtml = ''
+    if (userScore && userRank && algoVal) {
+      var _mt = calculateMajorTier(userScore, userRank, m, algoVal)
+      if (_mt) majorTierHtml = ' <span class="as-wide-tier-badge as-major-tier-' + _mt + '">' + _mt + '</span>'
+    }
     row.innerHTML =
       '<span class="as-wide-td as-wide-td-num">' + (mi + 1) + '</span>' +
-      '<span class="as-wide-td as-wide-td-name">' + escHtml(m.g) + '</span>' +
+      '<span class="as-wide-td as-wide-td-name">' + escHtml(m.g) + majorTierHtml + '</span>' +
       '<span class="as-wide-td as-wide-td-code">' + escHtml(m.code || '—') + '</span>' +
       '<span class="as-wide-td as-wide-td-fee">' + feeStr + '</span>' +
       '<span class="as-wide-td as-wide-td-2024">' + y2024 + '</span>' +
