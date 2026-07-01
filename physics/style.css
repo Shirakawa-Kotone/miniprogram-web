@@ -2147,6 +2147,18 @@ input[type="number"] {
   border-top: 1px solid var(--border-light);
 }
 
+/* 前6个专业细边框 */
+.as-wide-tr-bound {
+  border-left: 1px solid var(--border-light);
+  border-right: 1px solid var(--border-light);
+}
+.as-wide-tr-bound-start {
+  border-top: 1px solid var(--border-light);
+}
+.as-wide-tr-bound-end {
+  border-bottom: 1px solid var(--border-light);
+}
+
 .as-wide-td {
   flex-shrink: 0;
   overflow: hidden;

@@ -2441,7 +2441,14 @@ function renderCardWide(entry, userScore, userRank, gmi, algoVal) {
     const m = displayMajors[mi]
     const isMatched = m.g === entry.g
     const row = document.createElement('div')
-    row.className = 'as-wide-tr' + (isMatched ? ' as-wide-tr-matched' : '')
+    const isInFirstHalf = mi < 6
+    var cls = 'as-wide-tr' + (isMatched ? ' as-wide-tr-matched' : '')
+    if (isInFirstHalf) {
+      cls += ' as-wide-tr-bound'
+      if (mi === 0) cls += ' as-wide-tr-bound-start'
+      if (mi === Math.min(5, displayMajors.length - 1)) cls += ' as-wide-tr-bound-end'
+    }
+    row.className = cls
 
     var y2024 = ''
     if (m.a && m.a.s && m.a.r) {
