@@ -2299,18 +2299,12 @@ input[type="number"] {
   color: var(--text-secondary);
 }
 
-/* 窄屏下专业名列使用内容宽度，完整显示专业名 */
+/* 窄屏下保持列对齐，专业名通过表格扩展完整显示 */
 @media (max-width: 860px) {
   .as-wide-td-fee { width: 52px; }
   .as-wide-td-plan { width: 38px; }
   .as-wide-td-2024,
   .as-wide-td-2025 { width: 78px; }
-  .as-wide-td-name {
-    flex: none;
-    max-width: none;
-    overflow: visible;
-    white-space: normal;
-  }
 }
 
 /* ── 底部信息行 ── */
