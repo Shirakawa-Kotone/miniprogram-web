@@ -817,7 +817,7 @@ function makeOtherMajorsBody(others, userScore, userRank, algoVal, majorIndexDat
     item.className = 'adjust-major-item'
     // 计算专业级冲稳保
     var tierHtml = ''
-    if (userScore && userRank && algoVal && majorIndexData) {
+    if ((userScore || userRank) && algoVal && majorIndexData) {
       var fullMajor = majorIndexData.find(function (fm) { return fm.g === m.n })
       if (fullMajor) {
         var majorTier = calculateMajorTier(userScore, userRank, fullMajor, algoVal)
@@ -2552,7 +2552,7 @@ function renderCardWide(entry, userScore, userRank, gmi, algoVal) {
 
     // 计算专业级冲稳保
     var majorTierHtml = ''
-    if (userScore && userRank && algoVal) {
+    if ((userScore || userRank) && algoVal) {
       var _mt = calculateMajorTier(userScore, userRank, m, algoVal)
       if (_mt) majorTierHtml = ' <span class="as-wide-tier-badge as-major-tier-' + _mt + '">' + _mt + '</span>'
     }
