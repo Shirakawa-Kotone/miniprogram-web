@@ -773,18 +773,34 @@ function renderCardGrouped(item, idx, groupMajorMap, userScore, userRank, algoVa
   }
 
   // 同专业组其他专业（志愿推荐模式下默认展开）
-  if (groupMajorMap && item.g) {
+  // 优先使用 majorIndex（含完整录取数据），其次 groupMajorMap（仅原始数据）
+  if (item.g) {
     const mapKey = item.n + '\x00' + item.gc
     const cardKey = item.n + '\x00' + item.g
-    const majors = groupMajorMap.get(mapKey)
+
+    // 尝试从 majorIndex 获取（使用 g 字段作名称）
+    let majors = null
+    let majorsForTier = null
+    const md = majorIndex ? majorIndex.get(mapKey) : null
+    const mm = groupMajorMap ? groupMajorMap.get(mapKey) : null
+
+    if (md && md.length > 1) {
+      // majorIndex 有多个专业 → 转换字段名（g→n）并使用
+      majors = md.map(function (m) {
+        return { n: m.g, code: m.code, planCount: m.planCount, a: m.a, b: m.b, d: m.d }
+      })
+      majorsForTier = md
+    } else if (mm && mm.length > 1) {
+      majors = mm
+    }
+
     if (majors && majors.length > 1) {
-      const others = majors.filter(m => m.n !== item.g)
+      const others = majors.filter(function (m) { return m.n !== item.g })
       if (others.length > 0) {
         const _isOpen = state.assistantAdjustExpanded[cardKey] !== false
         body.appendChild(makeOtherMajorsHeader(cardKey, others, _isOpen))
         if (_isOpen) {
-          const md = majorIndex ? majorIndex.get(mapKey) : null
-          body.appendChild(makeOtherMajorsBody(others, userScore, userRank, algoVal, md))
+          body.appendChild(makeOtherMajorsBody(others, userScore, userRank, algoVal))
         }
       }
     }
@@ -807,7 +823,7 @@ function makeOtherMajorsHeader(mapKey, others, isOpen) {
   return wrapper
 }
 
-function makeOtherMajorsBody(others, userScore, userRank, algoVal, majorIndexData) {
+function makeOtherMajorsBody(others, userScore, userRank, algoVal) {
   const list = document.createElement('div')
   list.className = 'card-row card-remark-body'
   const listInner = document.createElement('div')
@@ -815,15 +831,12 @@ function makeOtherMajorsBody(others, userScore, userRank, algoVal, majorIndexDat
   for (const m of others) {
     const item = document.createElement('span')
     item.className = 'adjust-major-item'
-    // 计算专业级冲稳保
+    // 计算专业级冲稳保（优先使用专业自身 a/b/d 数据）
     var tierHtml = ''
-    if ((userScore || userRank) && algoVal && majorIndexData) {
-      var fullMajor = majorIndexData.find(function (fm) { return fm.g === m.n })
-      if (fullMajor) {
-        var majorTier = calculateMajorTier(userScore, userRank, fullMajor, algoVal)
-        if (majorTier) {
-          tierHtml = ' <span class="adjust-major-tier as-major-tier-' + majorTier + '">' + majorTier + '</span>'
-        }
+    if ((userScore || userRank) && algoVal && (m.a || m.b || m.d)) {
+      var majorTier = calculateMajorTier(userScore, userRank, m, algoVal)
+      if (majorTier) {
+        tierHtml = ' <span class="adjust-major-tier as-major-tier-' + majorTier + '">' + majorTier + '</span>'
       }
     }
     item.innerHTML = '· <span class="major-name">' + escHtml(m.n) + '</span>' + tierHtml +
