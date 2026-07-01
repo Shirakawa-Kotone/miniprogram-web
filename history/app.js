@@ -2329,8 +2329,25 @@ function renderCardWide(entry, userScore, userRank, gmi, algoVal) {
 
   card.appendChild(row1)
 
+  // ── 同专业组专业表格 ──
   const key = entry.n + '\x00' + entry.gc
-  const allMajors = gmi.get(key) || []
+  var allMajors = gmi.get(key)
+  if (!allMajors || !allMajors.length) {
+    // fallback: 索引未命中时，至少展示当前专业组自身
+    allMajors = []
+    if (entry.g) {
+      allMajors.push({
+        g: entry.g,
+        code: entry.d && entry.d.code ? entry.d.code : '',
+        fee: entry.fee,
+        planCount: entry.d ? entry.d.e : 0,
+        a: entry.a ? { s: entry.a.s, r: entry.a.r, e: entry.a.e } : null,
+        b: entry.b ? { s: entry.b.s, r: entry.b.r, e: entry.b.e } : null,
+        d: entry.d ? { code: entry.d.code, s: entry.d.s, r: entry.d.r, e: entry.d.e } : null,
+        remark: entry.remark,
+      })
+    }
+  }
   const matchedIdx = allMajors.findIndex(function (m) { return m.g === entry.g })
   const displayMajors = []
   if (matchedIdx >= 0) {
@@ -2357,6 +2374,13 @@ function renderCardWide(entry, userScore, userRank, gmi, algoVal) {
     '<span class="as-wide-td as-wide-td-2025">2025分/名</span>' +
     '<span class="as-wide-td as-wide-td-plan">计划</span>'
   table.appendChild(theader)
+  // 若无专业数据，显示提示
+  if (displayMajors.length === 0) {
+    const emptyRow = document.createElement("div")
+    emptyRow.className = "as-wide-tr"
+    emptyRow.innerHTML = '<span class="as-wide-td as-wide-td-name" style="color:var(--text-muted)">暂无该专业组详细数据</span>'
+    table.appendChild(emptyRow)
+  }
 
   for (let mi = 0; mi < displayMajors.length; mi++) {
     const m = displayMajors[mi]

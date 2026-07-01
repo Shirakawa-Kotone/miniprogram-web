@@ -2019,10 +2019,10 @@ input[type="number"] {
   flex: 1;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding: 16px;
+  padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 18px;
 }
 
 /* ── 横屏卡片 ── */
@@ -2039,12 +2039,12 @@ input[type="number"] {
 .as-wide-row1 {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 14px;
+  gap: 10px;
+  padding: 14px 16px;
   background: var(--bg);
   border-bottom: 1px solid var(--border-light);
   flex-wrap: wrap;
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .as-wide-sname {
@@ -2102,15 +2102,15 @@ input[type="number"] {
 .as-wide-table {
   display: flex;
   flex-direction: column;
-  padding: 8px 14px;
-  font-size: 12px;
+  padding: 10px 16px 12px;
+  font-size: 13px;
 }
 
 .as-wide-tr {
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 6px 0;
+  gap: 6px;
+  padding: 8px 0;
   border-bottom: 1px solid var(--border-light);
 }
 .as-wide-tr:last-child {
@@ -2205,7 +2205,7 @@ input[type="number"] {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 8px 14px;
+  padding: 10px 16px;
   border-top: 1px solid var(--border-light);
   font-size: 12px;
   color: var(--text-muted);
