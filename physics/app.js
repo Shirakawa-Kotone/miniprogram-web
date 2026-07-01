@@ -776,11 +776,9 @@ function renderCardGrouped(item, idx, groupMajorMap, userScore, userRank, algoVa
   // 优先使用 majorIndex（含完整录取数据），其次 groupMajorMap（仅原始数据）
   if (state.assistantAdjust && item.g) {
     const mapKey = item.n + '\x00' + item.gc
-    const cardKey = item.n + '\x00' + item.g
 
     // 尝试从 majorIndex 获取（使用 g 字段作名称）
     let majors = null
-    let majorsForTier = null
     const md = majorIndex ? majorIndex.get(mapKey) : null
     const mm = groupMajorMap ? groupMajorMap.get(mapKey) : null
 
@@ -789,7 +787,6 @@ function renderCardGrouped(item, idx, groupMajorMap, userScore, userRank, algoVa
       majors = md.map(function (m) {
         return { n: m.g, code: m.code, planCount: m.planCount, a: m.a, b: m.b, d: m.d }
       })
-      majorsForTier = md
     } else if (mm && mm.length > 1) {
       majors = mm
     }
@@ -797,11 +794,13 @@ function renderCardGrouped(item, idx, groupMajorMap, userScore, userRank, algoVa
     if (majors && majors.length > 1) {
       const others = majors.filter(function (m) { return m.n !== item.g })
       if (others.length > 0) {
-        const _isOpen = state.assistantAdjustExpanded[cardKey] !== false
-        body.appendChild(makeOtherMajorsHeader(cardKey, others, _isOpen))
-        if (_isOpen) {
-          body.appendChild(makeOtherMajorsBody(others, userScore, userRank, algoVal))
-        }
+        // 始终展开显示，不可折叠（勾选服从调剂即表示查看全部专业）
+        const label = document.createElement('div')
+        label.className = 'card-row card-remark-header'
+        label.style.cursor = 'default'
+        label.innerHTML = '<span class="card-label">同专业组其他专业</span>'
+        body.appendChild(label)
+        body.appendChild(makeOtherMajorsBody(others, userScore, userRank, algoVal))
       }
     }
   }
@@ -839,9 +838,19 @@ function makeOtherMajorsBody(others, userScore, userRank, algoVal) {
         tierHtml = ' <span class="adjust-major-tier as-major-tier-' + majorTier + '">' + majorTier + '</span>'
       }
     }
+    // 年份数据
+    var yearParts = []
+    if (m.a) {
+      yearParts.push('2024:' + (m.a.s || '—') + '/' + (m.a.r || '—'))
+    }
+    if (m.b) {
+      yearParts.push('2025:' + (m.b.s || '—') + '/' + (m.b.r || '—'))
+    }
+    var yearStr = yearParts.length ? ' <span class="major-detail">' + yearParts.join(' ') + '</span>' : ''
     item.innerHTML = '· ' + tierHtml + '<span class="major-name">' + escHtml(m.n) + '</span>' +
       (m.code ? ' <span class="major-detail">(代号' + escHtml(m.code) + ')</span>' : '') +
-      (m.planCount ? ' <span class="major-detail">计划' + m.planCount + '人</span>' : '')
+      (m.planCount ? ' <span class="major-detail">计划' + m.planCount + '人</span>' : '') +
+      yearStr
     listInner.appendChild(item)
   }
   list.appendChild(listInner)
@@ -2504,8 +2513,10 @@ function renderCardWide(entry, userScore, userRank, gmi, algoVal) {
   } else {
     for (let mi = 0; mi < allMajors.length; mi++) displayMajors.push(allMajors[mi])
   }
-  // 最多6个
-  while (displayMajors.length > 6) displayMajors.pop()
+  // 勾选服从调剂时显示同组全部专业，否则最多6个
+  if (!state.assistantAdjust) {
+    while (displayMajors.length > 6) displayMajors.pop()
+  }
 
   const table = document.createElement('div')
   table.className = 'as-wide-table'
@@ -2581,39 +2592,6 @@ function renderCardWide(entry, userScore, userRank, gmi, algoVal) {
   }
 
   card.appendChild(table)
-
-  // ── 服从调剂：显示同专业组其他未推荐专业 ──
-  if (state.assistantAdjust) {
-    const nonMatched = allMajors.filter(function (m) { return m.g !== entry.g })
-    if (nonMatched.length > 0) {
-      const adjustSection = document.createElement('div')
-      adjustSection.className = 'as-wide-adjust-section'
-      const adjustHeader = document.createElement('div')
-      adjustHeader.className = 'as-wide-adjust-header'
-      adjustHeader.textContent = '⊙ 同专业组其他专业（' + nonMatched.length + '个）'
-      adjustSection.appendChild(adjustHeader)
-      const adjustList = document.createElement('div')
-      adjustList.className = 'as-wide-adjust-list'
-      for (let ai = 0; ai < nonMatched.length; ai++) {
-        const m = nonMatched[ai]
-        const item = document.createElement('span')
-        item.className = 'adjust-major-item'
-        var tierHtml = ''
-        if ((userScore || userRank) && algoVal && (m.a || m.b || m.d)) {
-          var majorTier = calculateMajorTier(userScore, userRank, m, algoVal)
-          if (majorTier) {
-            tierHtml = ' <span class="adjust-major-tier as-major-tier-' + majorTier + '">' + majorTier + '</span>'
-          }
-        }
-        item.innerHTML = '· ' + tierHtml + '<span class="major-name">' + escHtml(m.g) + '</span>' +
-          (m.code ? ' <span class="major-detail">(代号' + escHtml(m.code) + ')</span>' : '') +
-          (m.planCount ? ' <span class="major-detail">计划' + m.planCount + '人</span>' : '')
-        adjustList.appendChild(item)
-      }
-      adjustSection.appendChild(adjustList)
-      card.appendChild(adjustSection)
-    }
-  }
 
   // ── 底部信息行 ──
   const footer = document.createElement('div')

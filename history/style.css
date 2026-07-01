@@ -2232,28 +2232,5 @@ input[type="number"] {
 .dark-mode .as-wide-row1 { background: #1e1e1e; }
 .dark-mode .as-wide-tr-matched { background: #1a2e2b; }
 .dark-mode .as-wide-batch-bar { background: #1e1e1e; }
-/* 宽卡片服从调剂区域 */
-.as-wide-adjust-section {
-  margin-top: 8px;
-  padding: 8px 12px 4px;
-  border-top: 1px dashed var(--border-color, #ddd);
-}
-.as-wide-adjust-header {
-  font-size: 12px;
-  color: var(--primary);
-  font-weight: 500;
-  margin-bottom: 4px;
-}
-.as-wide-adjust-list {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.as-wide-adjust-list .adjust-major-item {
-  font-size: 12px;
-  line-height: 1.8;
-  color: var(--text-secondary);
-}
-
 .dark-mode .as-wide-bar { background: #1e1e1e; border-bottom-color: #333; }
 .dark-mode .as-wide-batch-tab.active { background: #252525; border-color: #333; }

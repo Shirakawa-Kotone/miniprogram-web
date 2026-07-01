@@ -2227,40 +2227,12 @@ input[type="number"] {
   flex-shrink: 0;
 }
 
-.as-wide-fitem-adjust {
-  color: var(--primary);
-  font-weight: 500;
-}
-
 .as-wide-fitem-remark {
   color: var(--text-secondary);
   max-width: 300px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-/* 宽卡片服从调剂区域 */
-.as-wide-adjust-section {
-  margin-top: 8px;
-  padding: 8px 12px 4px;
-  border-top: 1px dashed var(--border-color, #ddd);
-}
-.as-wide-adjust-header {
-  font-size: 12px;
-  color: var(--primary);
-  font-weight: 500;
-  margin-bottom: 4px;
-}
-.as-wide-adjust-list {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.as-wide-adjust-list .adjust-major-item {
-  font-size: 12px;
-  line-height: 1.8;
-  color: var(--text-secondary);
 }
 
 /* ── 暗色模式 ── */
