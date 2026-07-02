@@ -2746,14 +2746,6 @@ function renderCardWide(entry, userScore, userRank, gmi, algoVal) {
     footer.appendChild(fb)
   }
 
-  // 备注
-  if (entry.remark) {
-    const fr = document.createElement('span')
-    fr.className = 'as-wide-fitem as-wide-fitem-remark'
-    fr.textContent = '备注: ' + entry.remark
-    footer.appendChild(fr)
-  }
-
   card.appendChild(footer)
 
   return card
