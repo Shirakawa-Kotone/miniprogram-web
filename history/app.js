@@ -1945,14 +1945,15 @@ function calculateTier(userScore, userRank, group, algorithm) {
         const ratio = group.d.r / userRank
         // 排名熔断：过远排名不再推荐
         if (Math.abs(group.d.r - userRank) > rankFuse) return null
+        if (ratio < 0.70) return '顶'
         if (ratio < 0.92) return '冲'
         if (ratio <= 1.08) return '稳'
-        // 保双重熔断：分数 > userScore-15 且 排名 ≤ max(userRank×130%, userRank+3000)
+        // 保双重熔断
         const rankCap = Math.max(userRank * 1.30, userRank + 3000)
-        if (group.d.r > rankCap) return null
+        if (group.d.r > rankCap) return '底'
         if (userScore) {
           const bestScore = getBestScore(group)
-          if (bestScore !== null && bestScore < userScore - 15) return null
+          if (bestScore !== null && bestScore < userScore - 15) return '底'
         }
         return '保'
       }
@@ -1968,14 +1969,15 @@ function calculateTier(userScore, userRank, group, algorithm) {
         // 排名熔断：过远排名不再推荐
         if (Math.abs(avgRank - userRank) > rankFuse) return null
         const ratio = avgRank / userRank
+        if (ratio < 0.70) return '顶'
         if (ratio < 0.92) return '冲'
         if (ratio <= 1.08) return '稳'
         // 保双重熔断
         const rankCap = Math.max(userRank * 1.30, userRank + 3000)
-        if (avgRank > rankCap) return null
+        if (avgRank > rankCap) return '底'
         if (userScore) {
           const bestScore = getBestScore(group)
-          if (bestScore !== null && bestScore < userScore - 15) return null
+          if (bestScore !== null && bestScore < userScore - 15) return '底'
         }
         return '保'
       }
@@ -1989,9 +1991,11 @@ function calculateTier(userScore, userRank, group, algorithm) {
       if (group.b && group.b.s) scores.push(group.b.s)
       if (scores.length > 0) {
         const bestScore = Math.max(...scores)
+        if (bestScore > userScore + 15) return '顶'
         if (bestScore > userScore + 5) return '冲'
         if (bestScore >= userScore - 5) return '稳'
-        return '保'
+        if (bestScore >= userScore - 15) return '保'
+        return '底'
       }
     }
     return null
@@ -2014,17 +2018,18 @@ function calculateTier(userScore, userRank, group, algorithm) {
     // 排名熔断：过远排名不再推荐
     if (Math.abs(refRank - userRank) > rankFuse) return null
     const ratio = refRank / userRank
+    if (ratio < 0.70) return '顶'
     if (ratio < 0.92) return '冲'
     if (ratio <= 1.08) return '稳'
     const rankCap = Math.max(userRank * 1.30, userRank + 3000)
-    if (refRank > rankCap) return null
+    if (refRank > rankCap) return '底'
     if (userScore) {
       const scores = []
       if (algorithm !== 'only2025' && group.a && group.a.s) scores.push(Number(group.a.s))
       if (algorithm !== 'only2024' && group.b && group.b.s) scores.push(Number(group.b.s))
       if (scores.length > 0) {
         const bestScore = Math.max(...scores)
-        if (bestScore < userScore - 15) return null
+        if (bestScore < userScore - 15) return '底'
       }
     }
     return '保'
@@ -2037,9 +2042,11 @@ function calculateTier(userScore, userRank, group, algorithm) {
     if (algorithm !== 'only2024' && group.b && group.b.s) scores.push(Number(group.b.s))
     if (scores.length > 0) {
       const bestScore = Math.max(...scores)
+      if (bestScore > userScore + 15) return '顶'
       if (bestScore > userScore + 5) return '冲'
       if (bestScore >= userScore - 5) return '稳'
-      return '保'
+      if (bestScore >= userScore - 15) return '保'
+      return '底'
     }
   }
 
@@ -2528,14 +2535,17 @@ function renderCardWide(entry, userScore, userRank, gmi, algoVal) {
 
     // 计算专业级冲稳保
     var majorTierHtml = ''
+    var _mt = null
     if ((userScore || userRank) && algoVal) {
-      var _mt = calculateMajorTier(userScore, userRank, m, algoVal)
+      _mt = calculateMajorTier(userScore, userRank, m, algoVal)
       if (_mt) majorTierHtml = ' <span class="as-wide-tier-badge as-major-tier-' + _mt + '">' + _mt + '</span>'
     }
     // 新增专业标记（无历史数据）
     var newTagHtml = (m.d && !m.a && !m.b) ? '<span class="as-wide-tag-new">新</span>' : ''
-    var remarkCellHtml = (m.remark && m.remark !== '—')
-      ? '<span class="as-wide-td as-wide-td-remark-btn-col"><span class="as-wide-remark-btn">注▸</span></span>'
+    var _hasRemark = m.remark && m.remark !== '—'
+    var _indicator = _mt || (_hasRemark ? '注' : '')
+    var remarkCellHtml = _indicator
+      ? '<span class="as-wide-td as-wide-td-remark-btn-col as-major-tier-' + _indicator + '"><span class="as-wide-remark-btn" data-char="' + _indicator + '">' + _indicator + '</span></span>'
       : '<span class="as-wide-td as-wide-td-remark-btn-col"></span>'
     row.innerHTML =
       '<span class="as-wide-td as-wide-td-num">' + (mi + 1) + '</span>' +
@@ -2565,7 +2575,8 @@ function renderCardWide(entry, userScore, userRank, gmi, algoVal) {
           if (nr && nr.classList.contains('as-wide-tr-remark')) {
             var hidden = nr.style.display === 'none'
             nr.style.display = hidden ? '' : 'none'
-            this.innerHTML = hidden ? '注▾' : '注▸'
+            var c = this.getAttribute('data-char') || '注'
+            this.innerHTML = hidden ? c + '▾' : c + '▸'
           }
         })
       }
