@@ -2226,13 +2226,24 @@ input[type="number"] {
 }
 
 .as-wide-td-name {
-  flex: 1;
-  min-width: 60px;
+  width: 110px;
+  min-width: 0;
+  flex-shrink: 0;
   font-weight: 500;
   display: inline-flex;
   align-items: center;
   gap: 4px;
 }
+.as-wide-name-scroll {
+  display: inline-block;
+  overflow-x: auto;
+  white-space: nowrap;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  min-width: 0;
+  flex: 1;
+}
+.as-wide-name-scroll::-webkit-scrollbar { display: none; }
 
 /* 专业级冲稳保标签（横屏卡片表格内） */
 .as-wide-tier-badge {
@@ -2245,9 +2256,15 @@ input[type="number"] {
   line-height: 16px;
   flex-shrink: 0;
 }
-.as-major-tier-冲 { background: #1565C0; }
+.as-major-tier-顶 { background: #c62828; }
+.as-major-tier-冲 { background: #e65100; }
 .as-major-tier-稳 { background: #00897B; }
-.as-major-tier-保 { background: #757575; }
+.as-major-tier-保 { background: #388e3c; }
+.as-major-tier-底 { background: #757575; }
+.dark-mode .as-major-tier-顶 { background: #ef5350; }
+.dark-mode .as-major-tier-冲 { background: #ff9800; }
+.dark-mode .as-major-tier-稳 { background: #26a69a; }
+.dark-mode .as-major-tier-保 { background: #66bb6a; }
 
 /* 宽卡片新增专业标记 */
 .as-wide-tag-new {
@@ -2293,29 +2310,18 @@ input[type="number"] {
 .as-wide-td-remark-btn-col {
   width: 24px;
   text-align: center;
-  font-size: 12px;
-  font-weight: 600;
 }
 .as-wide-remark-btn {
   display: inline-block;
+  font-size: 11px;
+  color: var(--link-color, #1a73e8);
   cursor: pointer;
   user-select: none;
-  line-height: 1.3;
+  line-height: 1.2;
 }
 .as-wide-remark-btn:hover {
   opacity: 0.7;
 }
-/* 各等级颜色 */
-.as-wide-td-remark-btn-col.as-major-tier-底 { color: var(--text-muted); }
-.as-wide-td-remark-btn-col.as-major-tier-保 { color: #388e3c; }
-.as-wide-td-remark-btn-col.as-major-tier-稳 { color: #1976d2; }
-.as-wide-td-remark-btn-col.as-major-tier-冲 { color: #e65100; }
-.as-wide-td-remark-btn-col.as-major-tier-顶 { color: #c62828; }
-.as-wide-td-remark-btn-col.as-major-tier-注 { color: var(--link-color, #1a73e8); }
-.dark-mode .as-wide-td-remark-btn-col.as-major-tier-保 { color: #66bb6a; }
-.dark-mode .as-wide-td-remark-btn-col.as-major-tier-稳 { color: #42a5f5; }
-.dark-mode .as-wide-td-remark-btn-col.as-major-tier-冲 { color: #ff9800; }
-.dark-mode .as-wide-td-remark-btn-col.as-major-tier-顶 { color: #ef5350; }
 
 /* 备注展开行 */
 .as-wide-tr-remark {
@@ -2331,8 +2337,9 @@ input[type="number"] {
 }
 .dark-mode .as-wide-tr-remark { background: #252525; }
 
-/* 窄屏下保持列对齐，专业名通过表格扩展完整显示 */
+/* 窄屏下列宽微调 */
 @media (max-width: 860px) {
+  .as-wide-td-name { width: 80px; }
   .as-wide-td-fee { width: 52px; }
   .as-wide-td-plan { width: 38px; }
   .as-wide-td-remark-btn-col { width: 20px; }

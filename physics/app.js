@@ -2681,14 +2681,12 @@ function renderCardWide(entry, userScore, userRank, gmi, algoVal) {
     }
     // 新增专业标记（无历史数据）
     var newTagHtml = (m.d && !m.a && !m.b) ? '<span class="as-wide-tag-new">新</span>' : ''
-    var _hasRemark = m.remark && m.remark !== '—'
-    var _indicator = _mt || (_hasRemark ? '注' : '')
-    var remarkCellHtml = _indicator
-      ? '<span class="as-wide-td as-wide-td-remark-btn-col as-major-tier-' + _indicator + '"><span class="as-wide-remark-btn" data-char="' + _indicator + '">' + _indicator + '</span></span>'
+    var remarkCellHtml = (m.remark && m.remark !== '—')
+      ? '<span class="as-wide-td as-wide-td-remark-btn-col"><span class="as-wide-remark-btn" data-char="注">注▸</span></span>'
       : '<span class="as-wide-td as-wide-td-remark-btn-col"></span>'
     row.innerHTML =
       '<span class="as-wide-td as-wide-td-num">' + (mi + 1) + '</span>' +
-      '<span class="as-wide-td as-wide-td-name">' + majorTierHtml + newTagHtml + escHtml(m.g) + '</span>' +
+      '<span class="as-wide-td as-wide-td-name">' + majorTierHtml + newTagHtml + '<span class="as-wide-name-scroll">' + escHtml(m.g) + '</span></span>' +
       '<span class="as-wide-td as-wide-td-code">' + escHtml(m.code || '—') + '</span>' +
       '<span class="as-wide-td as-wide-td-fee">' + feeStr + '</span>' +
       '<span class="as-wide-td as-wide-td-2024">' + y2024 + '</span>' +
